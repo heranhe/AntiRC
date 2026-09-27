@@ -1,0 +1,404 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		10010001 /* AntigravityRemoteApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20010001 /* AntigravityRemoteApp.swift */; };
+		10010002 /* ConnectionRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20010002 /* ConnectionRecord.swift */; };
+		10010003 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20010003 /* AppSettings.swift */; };
+		10010004 /* HapticManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20010004 /* HapticManager.swift */; };
+		10010005 /* UserAgentHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20010005 /* UserAgentHelper.swift */; };
+		10010006 /* MainContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20010006 /* MainContainerView.swift */; };
+		10010007 /* ConnectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20010007 /* ConnectView.swift */; };
+		10010008 /* QRScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20010008 /* QRScannerView.swift */; };
+		10010009 /* RemoteWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20010009 /* RemoteWebView.swift */; };
+		1001000A /* FloatingToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2001000A /* FloatingToolbarView.swift */; };
+		1001000B /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2001000B /* HistoryView.swift */; };
+		1001000C /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2001000C /* SettingsView.swift */; };
+		1001000D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2001000D /* Assets.xcassets */; };
+		1001000E /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2001000F /* DesignSystem.swift */; };
+		10010010 = {isa = PBXBuildFile; fileRef = 20010010; };
+		10010011 = {isa = PBXBuildFile; fileRef = 20010011; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		20000001 /* AntigravityRemote.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AntigravityRemote.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		20010001 /* AntigravityRemoteApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AntigravityRemoteApp.swift; sourceTree = "<group>"; };
+		20010002 /* ConnectionRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionRecord.swift; sourceTree = "<group>"; };
+		20010003 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
+		20010004 /* HapticManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticManager.swift; sourceTree = "<group>"; };
+		20010005 /* UserAgentHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserAgentHelper.swift; sourceTree = "<group>"; };
+		20010006 /* MainContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainContainerView.swift; sourceTree = "<group>"; };
+		20010007 /* ConnectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectView.swift; sourceTree = "<group>"; };
+		20010008 /* QRScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRScannerView.swift; sourceTree = "<group>"; };
+		20010009 /* RemoteWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteWebView.swift; sourceTree = "<group>"; };
+		2001000A /* FloatingToolbarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingToolbarView.swift; sourceTree = "<group>"; };
+		2001000B /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
+		2001000C /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		2001000D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		2001000E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		2001000F /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
+		20010010 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Conversation/ConversationBridge.swift; sourceTree = "<group>"; };
+		20010011 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Conversation/NativeConversationView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		30010001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		40010000 = {
+			isa = PBXGroup;
+			children = (
+				40010001 /* AntigravityRemote */,
+				40010005 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		40010001 /* AntigravityRemote */ = {
+			isa = PBXGroup;
+			children = (
+				20010001 /* AntigravityRemoteApp.swift */,
+				2001000F /* DesignSystem.swift */,
+				20010011,
+				20010010,
+				40010002 /* Models */,
+				40010003 /* Utils */,
+				40010004 /* Views */,
+				2001000D /* Assets.xcassets */,
+				2001000E /* Info.plist */,
+			);
+			path = AntigravityRemote;
+			sourceTree = "<group>";
+		};
+		40010002 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				20010002 /* ConnectionRecord.swift */,
+				20010003 /* AppSettings.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		40010003 /* Utils */ = {
+			isa = PBXGroup;
+			children = (
+				20010004 /* HapticManager.swift */,
+				20010005 /* UserAgentHelper.swift */,
+			);
+			path = Utils;
+			sourceTree = "<group>";
+		};
+		40010004 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				20010006 /* MainContainerView.swift */,
+				20010007 /* ConnectView.swift */,
+				20010008 /* QRScannerView.swift */,
+				20010009 /* RemoteWebView.swift */,
+				2001000A /* FloatingToolbarView.swift */,
+				2001000B /* HistoryView.swift */,
+				2001000C /* SettingsView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		40010005 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				20000001 /* AntigravityRemote.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		50010001 /* AntigravityRemote */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 60010002 /* Build configuration list for PBXNativeTarget "AntigravityRemote" */;
+			buildPhases = (
+				70010001 /* Sources */,
+				30010001 /* Frameworks */,
+				80010001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AntigravityRemote;
+			productName = AntigravityRemote;
+			productReference = 20000001 /* AntigravityRemote.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		60010000 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					50010001 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+				};
+			};
+			buildConfigurationList = 60010001 /* Build configuration list for PBXProject "AntigravityRemote" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = zh_CN;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				zh_CN,
+				Base,
+			);
+			mainGroup = 40010000;
+			productRefGroup = 40010005 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				50010001 /* AntigravityRemote */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		80010001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1001000D /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		70010001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				10010001 /* AntigravityRemoteApp.swift in Sources */,
+				10010002 /* ConnectionRecord.swift in Sources */,
+				10010003 /* AppSettings.swift in Sources */,
+				10010004 /* HapticManager.swift in Sources */,
+				10010005 /* UserAgentHelper.swift in Sources */,
+				1001000E /* DesignSystem.swift in Sources */,
+				10010011,
+				10010010,
+				10010006 /* MainContainerView.swift in Sources */,
+				10010007 /* ConnectView.swift in Sources */,
+				10010008 /* QRScannerView.swift in Sources */,
+				10010009 /* RemoteWebView.swift in Sources */,
+				1001000A /* FloatingToolbarView.swift in Sources */,
+				1001000B /* HistoryView.swift in Sources */,
+				1001000C /* SettingsView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		90010001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDEFINED_VARIABLES = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		90010002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDEFINED_VARIABLES = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		90010003 /* Debug */ = {
+	buildSettings = {
+		"ASSETCATALOG_COMPILER_APPICON_NAME" = AppIcon;
+		"ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME" = AccentColor;
+		"CODE_SIGN_STYLE" = Automatic;
+		"CURRENT_PROJECT_VERSION" = 5;
+		"DEVELOPMENT_ASSET_PATHS" = "";
+		"DEVELOPMENT_TEAM" = G6JJHZL29U;
+		"ENABLE_PREVIEWS" = YES;
+		"GENERATE_INFOPLIST_FILE" = NO;
+		"INFOPLIST_FILE" = "AntigravityRemote/Info.plist";
+		"INFOPLIST_KEY_CFBundleDisplayName" = AntiRC;
+		"INFOPLIST_KEY_LSApplicationCategoryType" = "public.app-category.developer-tools";
+		"LD_RUNPATH_SEARCH_PATHS" = (
+			"$(inherited)",
+			"@executable_path/Frameworks",
+		);
+		"MARKETING_VERSION" = "1.0.0";
+		"PRODUCT_BUNDLE_IDENTIFIER" = "com.heran.antigravity.remote";
+		"PRODUCT_NAME" = "$(TARGET_NAME)";
+		"SWIFT_EMIT_LOC_STRINGS" = YES;
+		"SWIFT_VERSION" = "5.0";
+		"TARGETED_DEVICE_FAMILY" = "1,2";
+	};
+	isa = XCBuildConfiguration;
+	name = Debug;
+};
+		90010004 /* Release */ = {
+	buildSettings = {
+		"ASSETCATALOG_COMPILER_APPICON_NAME" = AppIcon;
+		"ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME" = AccentColor;
+		"CODE_SIGN_STYLE" = Automatic;
+		"CURRENT_PROJECT_VERSION" = 5;
+		"DEVELOPMENT_ASSET_PATHS" = "";
+		"DEVELOPMENT_TEAM" = G6JJHZL29U;
+		"ENABLE_PREVIEWS" = YES;
+		"GENERATE_INFOPLIST_FILE" = NO;
+		"INFOPLIST_FILE" = "AntigravityRemote/Info.plist";
+		"INFOPLIST_KEY_CFBundleDisplayName" = AntiRC;
+		"INFOPLIST_KEY_LSApplicationCategoryType" = "public.app-category.developer-tools";
+		"LD_RUNPATH_SEARCH_PATHS" = (
+			"$(inherited)",
+			"@executable_path/Frameworks",
+		);
+		"MARKETING_VERSION" = "1.0.0";
+		"PRODUCT_BUNDLE_IDENTIFIER" = "com.heran.antigravity.remote";
+		"PRODUCT_NAME" = "$(TARGET_NAME)";
+		"SWIFT_EMIT_LOC_STRINGS" = YES;
+		"SWIFT_VERSION" = "5.0";
+		"TARGETED_DEVICE_FAMILY" = "1,2";
+	};
+	isa = XCBuildConfiguration;
+	name = Release;
+};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		60010001 /* Build configuration list for PBXProject "AntigravityRemote" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				90010001 /* Debug */,
+				90010002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		60010002 /* Build configuration list for PBXNativeTarget "AntigravityRemote" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				90010003 /* Debug */,
+				90010004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 60010000 /* Project object */;
+}

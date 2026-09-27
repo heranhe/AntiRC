@@ -1,0 +1,30 @@
+# Xcode
+## User settings
+xcuserdata/
+
+## Build generated
+build/
+DerivedData/
+*.moved-aside
+*.xcuserstate
+*.xccheckout
+
+## App Store Connect CLI artifacts (large archives & IPAs)
+.asc/artifacts/
+.asc/logs/
+*.ipa
+*.xcarchive
+*.dSYM.zip
+*.dSYM
+
+## Node / Tests
+node_modules/
+
+## OS generated
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
