@@ -25,7 +25,17 @@
           "zh-Hans": "在 iPhone 上\n掌控电脑端的Antigravity",
           "en": "Control Antigravity\nRight From Your iPhone"
         },
-        "screenshot": "/screenshots/apple/iphone/zh-Hans/01.png"
+        "screenshot": "/screenshots/apple/iphone/zh-Hans/01.png",
+        "transforms": {
+          "device": {
+            "x": 153.18224783861672,
+            "y": 745.68,
+            "width": 1013.635504,
+            "height": 2064.96,
+            "rotation": 0,
+            "zIndex": 3
+          }
+        }
       },
       {
         "id": "slide-3-start",
@@ -61,7 +71,17 @@
           "zh-Hans": "外网免配置秒连\n随时随地唤醒电脑端",
           "en": "Zero-Config Cloud Relay\nConnect Anywhere, Anytime"
         },
-        "screenshot": "/screenshots/apple/iphone/zh-Hans/02.png"
+        "screenshot": "/screenshots/apple/iphone/zh-Hans/02.png",
+        "transforms": {
+          "device": {
+            "x": 153.1822478386166,
+            "y": 745.68,
+            "width": 1013.6355043227666,
+            "height": 2064.96,
+            "rotation": 0,
+            "zIndex": 3
+          }
+        }
       },
       {
         "id": "slide-4-home",
