@@ -1,7 +1,7 @@
 # AntiRC - Antigravity 专属 iOS 远程控制器 (Antigravity Remote)
 
 <p align="center">
-  <img src="AntigravityRemote/Assets.xcassets/AppIcon.appiconset/AppIcon1024.png" width="128" height="128" alt="AntiRC Icon" style="border-radius: 28px; box-shadow: 0 8px 24px rgba(0,0,0,0.35);">
+  <img src="docs/app_icon.png" width="128" height="128" alt="AntiRC Icon" style="border-radius: 28px; box-shadow: 0 8px 24px rgba(0,0,0,0.35);">
 </p>
 
 <p align="center">
