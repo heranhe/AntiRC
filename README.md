@@ -152,8 +152,8 @@ antigravity --remote
 ### 编译部署步骤
 1. **克隆仓库源码**：
    ```bash
-   git clone https://github.com/heranhe/AntigravityRemote.git
-   cd AntigravityRemote
+   git clone https://github.com/heranhe/AntiRC.git
+   cd AntiRC
    ```
 
 2. **使用 Xcode 打开工程**：
@@ -270,7 +270,7 @@ iOS 系统会在锁屏或切换到后台数分钟后挂起网络连接。为了�
 ## 🤝 贡献与反馈
 
 欢迎提交 Issue 或 Pull Request 来共同完善 AntiRC！
-- 提交 Bug 或功能建议：[GitHub Issues](https://github.com/heranhe/AntigravityRemote/issues)
+- 提交 Bug 或功能建议：[GitHub Issues](https://github.com/heranhe/AntiRC/issues)
 - 遵循现有的 Swift 代码规范，提交清晰规范的 Commit 记录。
 
 ---
