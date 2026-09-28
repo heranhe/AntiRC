@@ -419,6 +419,40 @@ public enum ConversationBridge {
           cancel.click();
           return true;
         },
+        newConversation(projectTitle) {
+          let btn = null;
+          if (projectTitle) {
+            const headers = [...document.querySelectorAll('[data-testid="section-header"]')];
+            const header = headers.find(item => item.getAttribute('data-title') === projectTitle || clean(item.textContent).includes(projectTitle));
+            if (header) {
+              btn = header.querySelector('button, [role="button"]');
+            }
+          }
+          if (!btn) {
+            const candidates = [...document.querySelectorAll('button, [role="button"]')].filter(visible);
+            btn = candidates.find(b => {
+              const label = b.getAttribute('aria-label') || b.getAttribute('data-testid') || clean(b.textContent);
+              return /new conversation|new chat|新建对话|新建会话/i.test(label);
+            });
+          }
+          if (btn) {
+            btn.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerType: 'mouse', isPrimary: true }));
+            btn.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, button: 0, pointerType: 'mouse', isPrimary: true }));
+            btn.click();
+          } else {
+            const active = document.activeElement || document.body;
+            active.dispatchEvent(new KeyboardEvent('keydown', { key: 'n', code: 'KeyN', ctrlKey: true, metaKey: true, bubbles: true }));
+          }
+          setTimeout(() => {
+            const ed = input();
+            if (ed) {
+              ed.focus();
+              ed.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }, 300);
+          publish();
+          return true;
+        },
         openConversation(cascadeId) {
           const escaped = window.CSS?.escape ? CSS.escape(String(cascadeId)) : String(cascadeId).replace(/["\\\]\[]/g, '');
           const row = document.querySelector(`[data-testid^="conversation-row-"][data-cascade-id="${escaped}"]`);
@@ -531,6 +565,23 @@ public enum ConversationBridge {
           subtree: true, childList: true, characterData: true, attributes: true
         });
       }
+      document.addEventListener('click', function(e) {
+        const btn = e.target.closest('button, [role="button"]');
+        if (btn) {
+          const inHeader = btn.closest('[data-testid="section-header"]');
+          const isNew = /new|add|新建|加/i.test(btn.getAttribute('aria-label') || btn.getAttribute('data-testid') || '');
+          if (inHeader || isNew) {
+            setTimeout(() => {
+              const ed = input();
+              if (ed) {
+                ed.focus();
+                ed.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }
+            }, 300);
+          }
+        }
+      }, { capture: false, passive: true });
+
       publish();
       if (typeof setInterval === 'function') setInterval(publish, 700);
     })();

@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 2,
+  "appName": "AntiRC",
+  "themeId": "midnight-glow-pro",
+  "connectedCanvas": true,
+  "locales": [
+    "zh-Hans",
+    "en"
+  ],
+  "locale": "zh-Hans",
+  "device": "iphone",
+  "orientation": "portrait",
+  "appIcon": "/app-icon.png",
+  "slidesByDevice": {
+    "iphone": [
+      {
+        "id": "slide-1-welcome",
+        "layout": "device-bottom",
+        "label": {
+          "zh-Hans": "ANTIGRAVITY REMOTE",
+          "en": "ANTIGRAVITY REMOTE"
+        },
+        "headline": {
+          "zh-Hans": "在 iPhone 上\n掌控电脑端智能体",
+          "en": "Control Antigravity\nRight From Your iPhone"
+        },
+        "typography": {
+          "headlineScale": 0.88
+        },
+        "screenshot": "/screenshots/apple/iphone/zh-Hans/01.png"
+      },
+      {
+        "id": "slide-2-features",
+        "layout": "device-bottom",
+        "label": {
+          "zh-Hans": "CLOUD RELAY TUNNEL",
+          "en": "CLOUD RELAY TUNNEL"
+        },
+        "headline": {
+          "zh-Hans": "外网免配置秒连\n随时随地唤醒电脑端",
+          "en": "Zero-Config Cloud Relay\nConnect Anywhere, Anytime"
+        },
+        "typography": {
+          "headlineScale": 0.88
+        },
+        "screenshot": "/screenshots/apple/iphone/zh-Hans/02.png"
+      },
+      {
+        "id": "slide-3-start",
+        "layout": "device-bottom",
+        "label": {
+          "zh-Hans": "INSTANT CAMERA SCAN",
+          "en": "INSTANT CAMERA SCAN"
+        },
+        "headline": {
+          "zh-Hans": "原生相机极速扫码\n毫秒级建立双端会话",
+          "en": "Instant Camera Scan\nConnect in Milliseconds"
+        },
+        "typography": {
+          "headlineScale": 0.88
+        },
+        "screenshot": "/screenshots/apple/iphone/zh-Hans/03.png"
+      },
+      {
+        "id": "slide-4-home",
+        "layout": "device-bottom",
+        "label": {
+          "zh-Hans": "SESSION CONTROL HUB",
+          "en": "SESSION CONTROL HUB"
+        },
+        "headline": {
+          "zh-Hans": "设备与任务大厅\n多端状态实时掌握",
+          "en": "Session Hub & History\nMonitor All Remote Agents"
+        },
+        "typography": {
+          "headlineScale": 0.88
+        },
+        "screenshot": "/screenshots/apple/iphone/zh-Hans/04.png"
+      }
+    ]
+  }
+}

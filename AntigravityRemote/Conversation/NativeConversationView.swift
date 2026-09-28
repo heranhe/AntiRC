@@ -81,6 +81,18 @@ struct NativeConversationView: View {
                 .accessibilityLabel("网页后退")
             }
             
+            // 新建对话
+            Button {
+                HapticManager.light()
+                model.newConversation()
+            } label: {
+                Image(systemName: "square.and.pencil")
+                    .font(.body.weight(.medium))
+                    .frame(width: 44, height: 44)
+                    .conversationGlass(in: Circle(), interactive: true)
+            }
+            .accessibilityLabel("新建对话")
+
             // 右侧：更多操作菜单
             moreMenu
         }
@@ -103,6 +115,13 @@ struct NativeConversationView: View {
     // MARK: - 更多操作菜单
     private var moreMenu: some View {
         Menu {
+            Button {
+                HapticManager.light()
+                model.newConversation()
+            } label: {
+                Label("新建对话", systemImage: "square.and.pencil")
+            }
+
             Button {
                 HapticManager.light()
                 model.reload()

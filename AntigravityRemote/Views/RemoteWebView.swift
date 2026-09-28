@@ -43,6 +43,7 @@ public final class WebViewModel: ObservableObject {
     var selectModelAction: ((String, @escaping (Bool) -> Void) -> Void)?
     var openUsageAction: (() -> Void)?
     var closePanelsAction: (() -> Void)?
+    var newConversationAction: ((String?) -> Void)?
 
     func resetConversation() {
         messages = []
@@ -84,6 +85,7 @@ public final class WebViewModel: ObservableObject {
         selectModelAction(id, completion)
     }
     func openUsage() { openUsageAction?() }
+    public func newConversation(projectTitle: String? = nil) { newConversationAction?(projectTitle) }
 
     func attachImage(_ data: Data, name: String, type: String, completion: @escaping (Bool) -> Void) {
         guard let attachImageAction, !isAttaching else { completion(false); return }
@@ -355,6 +357,9 @@ public struct RemoteWebView: UIViewRepresentable {
                     "return await window.__antiConversation?.closePanels() ?? false;",
                     arguments: [:], in: self?.activeFrame, in: .page
                 ) { _ in }
+            }
+            parent.viewModel.newConversationAction = { [weak self] project in
+                self?.perform("newConversation", value: project ?? "")
             }
             parent.viewModel.attachImageAction = { [weak self, weak webView] data, name, type, completion in
                 guard let webView else { completion(false); return }

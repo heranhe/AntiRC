@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 2,
+  "appName": "AntiRC",
+  "themeId": "liquid-glass-aurora",
+  "connectedCanvas": true,
+  "locales": [
+    "zh-Hans",
+    "en"
+  ],
+  "locale": "zh-Hans",
+  "device": "iphone",
+  "orientation": "portrait",
+  "appIcon": "/app-icon.png",
+  "slidesByDevice": {
+    "iphone": [
+      {
+        "id": "slide-1-welcome",
+        "layout": "device-bottom",
+        "label": {
+          "zh-Hans": "AI ASSISTANT TO GO",
+          "en": "AI ASSISTANT TO GO"
+        },
+        "headline": {
+          "zh-Hans": "随身而行\n随处掌控桌面智能体",
+          "en": "Always Within Reach\nControl AI Agents On The Go"
+        },
+        "typography": {
+          "headlineScale": 0.88
+        },
+        "screenshot": "/screenshots/apple/iphone/zh-Hans/01.png"
+      },
+      {
+        "id": "slide-2-features",
+        "layout": "device-bottom",
+        "label": {
+          "zh-Hans": "SEAMLESS CLOUD RELAY",
+          "en": "SEAMLESS CLOUD RELAY"
+        },
+        "headline": {
+          "zh-Hans": "无论身在何处\n4G / 5G 随时无感连通",
+          "en": "Zero Setup Needed\nConnect Anywhere via 5G & Wi-Fi"
+        },
+        "typography": {
+          "headlineScale": 0.88
+        },
+        "screenshot": "/screenshots/apple/iphone/zh-Hans/02.png"
+      },
+      {
+        "id": "slide-3-start",
+        "layout": "device-bottom",
+        "label": {
+          "zh-Hans": "EFFORTLESS PAIRING",
+          "en": "EFFORTLESS PAIRING"
+        },
+        "headline": {
+          "zh-Hans": "镜头轻扫或剪贴板\n一触即可瞬时接入",
+          "en": "Instant Camera Scan\nPair Your Screen in Seconds"
+        },
+        "typography": {
+          "headlineScale": 0.88
+        },
+        "screenshot": "/screenshots/apple/iphone/zh-Hans/03.png"
+      },
+      {
+        "id": "slide-4-home",
+        "layout": "device-bottom",
+        "label": {
+          "zh-Hans": "DEVICE HUB",
+          "en": "DEVICE HUB"
+        },
+        "headline": {
+          "zh-Hans": "多端设备清晰罗列\n智能体动态一目了然",
+          "en": "Agent Control Center\nMonitor Tasks at a Glance"
+        },
+        "typography": {
+          "headlineScale": 0.88
+        },
+        "screenshot": "/screenshots/apple/iphone/zh-Hans/04.png"
+      }
+    ]
+  }
+}

@@ -19,6 +19,7 @@ DerivedData/
 
 ## Node / Tests
 node_modules/
+.next/
 
 ## OS generated
 .DS_Store
