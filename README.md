@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <strong>在你的 iPhone 上，随时掌控电脑端 AI 智能体</strong>
+  <strong>在你的 iPhone 上，掌控电脑端的 Antigravity</strong>
   <br>
   <em>告别笨重远程桌面，专为 Google Antigravity 打造的高颜值、高性能移动端控制器</em>
 </p>
@@ -29,27 +29,27 @@
 ## 📱 视觉画廊 (Showcase)
 
 <p align="center">
-  <img src="docs/screenshots/01_remote_control.png" width="23%" alt="在 iPhone 上掌控 AI 智能体">
+  <img src="docs/screenshots/01_remote_control.png" width="23%" alt="在 iPhone 上掌控电脑端的 Antigravity">
   &nbsp;
-  <img src="docs/screenshots/02_cloud_relay.png" width="23%" alt="外网免配置秒连">
+  <img src="docs/screenshots/02_cloud_relay.png" width="23%" alt="外网免配置秒连 随时随地唤醒电脑端">
   &nbsp;
-  <img src="docs/screenshots/03_fast_connect.png" width="23%" alt="原生相机极速扫码">
+  <img src="docs/screenshots/03_fast_connect.png" width="23%" alt="原生相机扫码 快速建立会话">
   &nbsp;
-  <img src="docs/screenshots/04_session_hub.png" width="23%" alt="连接大厅与历史管理">
+  <img src="docs/screenshots/04_session_hub.png" width="23%" alt="连接大厅与历史管理 多端状态一目了然">
 </p>
 
 <p align="center">
-  <em>从左至右依次为：AI 移动端掌控体验、云端中继外网秒连、毫秒级原生相机扫码、多设备管理与免登录沙盒</em>
+  <em>从左至右依次为：移动端掌控 Antigravity、云端中继外网秒连、原生相机扫码极速握手、多设备管理与免登录沙盒</em>
 </p>
 
 ---
 
 ## 🌟 核心特性详解
 
-### 1. 🤖 在 iPhone 上掌控电脑端 AI 智能体 (Antigravity Remote)
+### 1. 🤖 在 iPhone 上掌控电脑端的 Antigravity (Antigravity Remote)
 <table>
   <tr>
-    <td width="35%"><img src="docs/screenshots/01_remote_control.png" alt="掌控电脑端 AI 智能体"></td>
+    <td width="35%"><img src="docs/screenshots/01_remote_control.png" alt="在 iPhone 上掌控电脑端的 Antigravity"></td>
     <td width="65%">
       <ul>
         <li><strong>告别传统远程桌面</strong>：摆脱 VNC、TeamViewer 等远程桌面在手机上字体模糊、操作卡顿、输入法错位的糟糕体验。</li>
@@ -61,10 +61,10 @@
   </tr>
 </table>
 
-### 2. 🌐 外网免配置秒连 · 随时随地唤醒电脑 (Cloud Relay)
+### 2. 🌐 外网免配置秒连 · 随时随地唤醒电脑端 (Cloud Relay)
 <table>
   <tr>
-    <td width="35%"><img src="docs/screenshots/02_cloud_relay.png" alt="外网免配置秒连"></td>
+    <td width="35%"><img src="docs/screenshots/02_cloud_relay.png" alt="外网免配置秒连 随时随地唤醒电脑端"></td>
     <td width="65%">
       <ul>
         <li><strong>无需公网 IP / 端口映射</strong>：依托 Antigravity 官方安全的云端中继通道，告别复杂的内网穿透（FRP、Ngrok）配置。</li>
@@ -76,10 +76,10 @@
   </tr>
 </table>
 
-### 3. ⚡ 原生相机极速扫码 · 毫秒级建立会话 (Fast Connect)
+### 3. ⚡ 原生相机扫码 · 快速建立会话 (Fast Connect)
 <table>
   <tr>
-    <td width="35%"><img src="docs/screenshots/03_fast_connect.png" alt="原生相机极速扫码"></td>
+    <td width="35%"><img src="docs/screenshots/03_fast_connect.png" alt="原生相机扫码 快速建立会话"></td>
     <td width="65%">
       <ul>
         <li><strong>硬件级相机流识别</strong>：基于 iOS AVFoundation 框架底层深度开发，开启后毫秒级捕获屏幕二维码，对准即连接。</li>
@@ -94,7 +94,7 @@
 ### 4. 🗂️ 连接大厅与历史管理 · 多端状态一目了然 (Session Hub)
 <table>
   <tr>
-    <td width="35%"><img src="docs/screenshots/04_session_hub.png" alt="连接大厅与历史管理"></td>
+    <td width="35%"><img src="docs/screenshots/04_session_hub.png" alt="连接大厅与历史管理 多端状态一目了然"></td>
     <td width="65%">
       <ul>
         <li><strong>多设备管理与快速切换</strong>：自动持久化保存历史连接，支持给设备自定义重命名（如“工位 Mac Studio”、“个人 MacBook”）。</li>

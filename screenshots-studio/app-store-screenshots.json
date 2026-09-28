@@ -18,8 +18,8 @@
         "id": "slide-1-welcome",
         "layout": "device-bottom",
         "label": {
-          "zh-Hans": "ANTIGRAVITY REMOTE",
-          "en": "ANTIGRAVITY REMOTE"
+          "en": "ANTIGRAVITY REMOTE",
+          "zh-Hans": "Antigravity RC"
         },
         "headline": {
           "zh-Hans": "在 iPhone 上\n掌控电脑端的Antigravity",
@@ -57,6 +57,14 @@
             "height": 2064.96,
             "rotation": 0,
             "zIndex": 3
+          },
+          "caption": {
+            "x": 105.59999999999991,
+            "y": 229.44,
+            "width": 1108.8,
+            "height": 803.0400000000001,
+            "rotation": 0,
+            "zIndex": 4
           }
         }
       },
@@ -80,6 +88,14 @@
             "height": 2064.96,
             "rotation": 0,
             "zIndex": 3
+          },
+          "caption": {
+            "x": 105.59999999999991,
+            "y": 229.44,
+            "width": 1108.8,
+            "height": 803.0400000000001,
+            "rotation": 0,
+            "zIndex": 4
           }
         }
       },
@@ -94,7 +110,25 @@
           "zh-Hans": "连接大厅与历史管理\n多端状态一目了然",
           "en": "Session Hub & History\nMonitor All Remote Agents"
         },
-        "screenshot": "/screenshots/apple/iphone/zh-Hans/04.png"
+        "screenshot": "/screenshots/apple/iphone/zh-Hans/04.png",
+        "transforms": {
+          "caption": {
+            "x": 105.60000000000036,
+            "y": 229.44,
+            "width": 1108.8,
+            "height": 803.0400000000001,
+            "rotation": 0,
+            "zIndex": 4
+          },
+          "device": {
+            "x": 153.1822478386166,
+            "y": 741.314703196347,
+            "width": 1013.6355043227666,
+            "height": 2064.96,
+            "rotation": 0,
+            "zIndex": 3
+          }
+        }
       }
     ],
     "android": [
