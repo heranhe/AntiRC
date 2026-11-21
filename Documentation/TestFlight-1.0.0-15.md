@@ -15,3 +15,9 @@
 - 模拟器（iPhone 17）编译通过，顶部栏和 ⋯ 菜单显示正常。
 - 原生 `AccountRecoveryTests` 21 项通过，JavaScript 23 项通过。
 - 未完成：真机多账号验收（同 build 14）。
+
+## 上传
+
+- 版本：`1.0.0 (15)`，Release 归档，自动签名（团队 `G6JJHZL29U`）。
+- `xcodebuild -exportArchive`（app-store-connect / upload）：Upload succeeded，构建处于 Apple 处理流程中。
+- 外部测试组分配与 What to Test 需在 App Store Connect 中确认。
