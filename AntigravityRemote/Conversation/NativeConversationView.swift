@@ -126,96 +126,56 @@ struct NativeConversationView: View {
         }
     }
 
-    // MARK: - 顶部导航栏（保留顶部 UI）
+    // MARK: - 顶部导航栏
+    // 只保留网页没有的：返回大厅、连接状态、账号与连接菜单。新建对话、刷新等交给网页自带的顶栏和输入框。
     private var navigation: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 8) {
             // 左侧：返回连接列表（后台保活，不掐断连接）
             glassButton("返回连接列表", symbol: "chevron.left", action: onBack)
-            
+
             // 中间：标题与同步状态
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: 1) {
                 Text(title)
-                    .font(.headline)
+                    .font(.subheadline.weight(.semibold))
                     .lineLimit(1)
-                HStack(spacing: 5) {
+                HStack(spacing: 4) {
                     Circle()
                         .fill(statusColor)
-                        .frame(width: 6, height: 6)
+                        .frame(width: 5, height: 5)
                     Text(statusText)
-                        .font(.caption)
+                        .font(.caption2)
                         .foregroundStyle(.secondary)
+                        .lineLimit(1)
                 }
             }
-            
+            .accessibilityElement(children: .combine)
+
             Spacer(minLength: 0)
-            
-            // 网页后退（如有历史页面）
-            if model.canGoBack {
-                Button {
-                    HapticManager.light()
-                    model.goBack()
-                } label: {
-                    Image(systemName: "chevron.backward")
-                        .font(.body.weight(.medium))
-                        .frame(width: 44, height: 44)
-                        .conversationGlass(in: Circle(), interactive: true)
-                }
-                .accessibilityLabel("网页后退")
-            }
-            
-            // 新建对话
-            Button {
-                HapticManager.light()
-                model.newConversation()
-            } label: {
-                Image(systemName: "square.and.pencil")
-                    .font(.body.weight(.medium))
-                    .frame(width: 44, height: 44)
-                    .conversationGlass(in: Circle(), interactive: true)
-            }
-            .accessibilityLabel("新建对话")
 
             // 右侧：更多操作菜单
             moreMenu
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
-        .background {
-            LinearGradient(
-                colors: [
-                    Color(uiColor: .systemBackground),
-                    Color(uiColor: .systemBackground).opacity(0.85),
-                    .clear
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea(edges: .top)
-        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 2)
     }
-    
+
     // MARK: - 更多操作菜单
     private var moreMenu: some View {
         Menu {
             Button {
                 HapticManager.light()
-                model.newConversation()
-            } label: {
-                Label("新建对话", systemImage: "square.and.pencil")
-            }
-
-            Button {
-                HapticManager.light()
-                model.reload()
-            } label: {
-                Label("重新加载", systemImage: "arrow.clockwise")
-            }
-
-            Button {
-                HapticManager.light()
                 showsAccountOptions = true
             } label: {
                 Label("切换 Google 账号", systemImage: "person.2.circle")
+            }
+
+            if model.canGoBack {
+                Button {
+                    HapticManager.light()
+                    model.goBack()
+                } label: {
+                    Label("网页后退", systemImage: "chevron.backward")
+                }
             }
 
             if !settings.showFloatingButton {
@@ -225,13 +185,13 @@ struct NativeConversationView: View {
                     Label("显示悬浮控制球", systemImage: "dot.scope")
                 }
             }
-            
+
             if let url = model.currentURL {
                 ShareLink(item: url) {
                     Label("分享连接", systemImage: "square.and.arrow.up")
                 }
             }
-            
+
             Divider()
             
             Button(role: .destructive, action: onDisconnect) {
@@ -239,9 +199,11 @@ struct NativeConversationView: View {
             }
         } label: {
             Image(systemName: "ellipsis")
-                .font(.body.weight(.semibold))
-                .frame(width: 44, height: 44)
+                .font(.subheadline.weight(.semibold))
+                .frame(width: 34, height: 34)
                 .conversationGlass(in: Circle(), interactive: true)
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
         }
         .accessibilityLabel("更多选项")
     }
@@ -407,9 +369,11 @@ struct NativeConversationView: View {
     private func glassButton(_ label: String, symbol: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: symbol)
-                .font(.body.weight(.semibold))
-                .frame(width: 44, height: 44)
+                .font(.subheadline.weight(.semibold))
+                .frame(width: 34, height: 34)
                 .conversationGlass(in: Circle(), interactive: true)
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
         }
         .accessibilityLabel(label)
     }
