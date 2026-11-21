@@ -6,6 +6,19 @@
 	objectVersion = 56;
 	objects = {
 
+        AACC00000000000000000001 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests/AccountRecoveryTests.swift; sourceTree = "<group>"; };
+        AACC00000000000000000002 = {isa = PBXBuildFile; fileRef = AACC00000000000000000001; };
+        AACC00000000000000000003 = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = AntigravityRemoteTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+        AACC00000000000000000004 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (AACC00000000000000000002,); runOnlyForDeploymentPostprocessing = 0; };
+        AACC00000000000000000005 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+        AACC00000000000000000006 = {isa = PBXNativeTarget; buildConfigurationList = AACC00000000000000000007; buildPhases = (AACC00000000000000000004, AACC00000000000000000005,); buildRules = (); dependencies = (AACC0000000000000000000B,); name = AntigravityRemoteTests; productName = AntigravityRemoteTests; productReference = AACC00000000000000000003; productType = "com.apple.product-type.bundle.unit-test"; };
+        AACC00000000000000000007 = {isa = XCConfigurationList; buildConfigurations = (AACC00000000000000000008, AACC00000000000000000009,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+        AACC0000000000000000000A = {isa = PBXContainerItemProxy; containerPortal = 60010000; proxyType = 1; remoteGlobalIDString = 50010001; remoteInfo = AntigravityRemote; };
+        AACC0000000000000000000B = {isa = PBXTargetDependency; target = 50010001; targetProxy = AACC0000000000000000000A; };
+        AACC00000000000000000008 = {isa = XCBuildConfiguration; buildSettings = {BUNDLE_LOADER = "$(TEST_HOST)"; CODE_SIGN_STYLE = Automatic; DEVELOPMENT_TEAM = G6JJHZL29U; GENERATE_INFOPLIST_FILE = YES; IPHONEOS_DEPLOYMENT_TARGET = 17.0; PRODUCT_BUNDLE_IDENTIFIER = com.heran.antigravity.remote.tests; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = iphoneos; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AntigravityRemote.app/AntigravityRemote";}; name = Debug; };
+        AACC00000000000000000009 = {isa = XCBuildConfiguration; buildSettings = {BUNDLE_LOADER = "$(TEST_HOST)"; CODE_SIGN_STYLE = Automatic; DEVELOPMENT_TEAM = G6JJHZL29U; GENERATE_INFOPLIST_FILE = YES; IPHONEOS_DEPLOYMENT_TARGET = 17.0; PRODUCT_BUNDLE_IDENTIFIER = com.heran.antigravity.remote.tests; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = iphoneos; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AntigravityRemote.app/AntigravityRemote";}; name = Release; };
+
+
 /* Begin PBXBuildFile section */
 		10010001 /* AntigravityRemoteApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20010001 /* AntigravityRemoteApp.swift */; };
 		10010002 /* ConnectionRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20010002 /* ConnectionRecord.swift */; };
@@ -61,6 +74,7 @@
 			isa = PBXGroup;
 			children = (
 				40010001 /* AntigravityRemote */,
+                AACC00000000000000000001,
 				40010005 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -117,6 +131,7 @@
 			isa = PBXGroup;
 			children = (
 				20000001 /* AntigravityRemote.app */,
+                AACC00000000000000000003,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -170,6 +185,7 @@
 			projectRoot = "";
 			targets = (
 				50010001 /* AntigravityRemote */,
+                AACC00000000000000000006,
 			);
 		};
 /* End PBXProject section */
@@ -328,7 +344,7 @@
 		"ASSETCATALOG_COMPILER_APPICON_NAME" = AppIcon;
 		"ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME" = AccentColor;
 		"CODE_SIGN_STYLE" = Automatic;
-		"CURRENT_PROJECT_VERSION" = 8;
+		"CURRENT_PROJECT_VERSION" = 14;
 		"DEVELOPMENT_ASSET_PATHS" = "";
 		"DEVELOPMENT_TEAM" = G6JJHZL29U;
 		"ENABLE_PREVIEWS" = YES;
@@ -355,7 +371,7 @@
 		"ASSETCATALOG_COMPILER_APPICON_NAME" = AppIcon;
 		"ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME" = AccentColor;
 		"CODE_SIGN_STYLE" = Automatic;
-		"CURRENT_PROJECT_VERSION" = 8;
+		"CURRENT_PROJECT_VERSION" = 14;
 		"DEVELOPMENT_ASSET_PATHS" = "";
 		"DEVELOPMENT_TEAM" = G6JJHZL29U;
 		"ENABLE_PREVIEWS" = YES;

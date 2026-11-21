@@ -248,6 +248,10 @@ public struct MainContainerView: View {
 
     @State private var sessionState: SessionState = .disconnected
     @State private var isShowingConversation: Bool = false
+    /// 当前网页会话对应的连接记录。
+    @State private var sessionRecordID: UUID?
+    /// 推测账号尚未确认期间识别到的邮箱，确认可用后再写入记录。
+    @State private var pendingIdentifiedEmail: String?
     @StateObject private var webViewModel = WebViewModel()
 
     public init(settings: AppSettings) {
@@ -277,6 +281,22 @@ public struct MainContainerView: View {
         }
         .animation(DesignToken.fade, value: isShowingConversation)
         .preferredColorScheme(isShowingConversation ? nil : .dark)
+        .onChange(of: webViewModel.health) { _, health in
+            syncSessionStatus(health)
+        }
+        .onChange(of: workspaceConfirmed) { _, confirmed in
+            if confirmed { confirmGuessedAccount() }
+        }
+        .onChange(of: settings.webSessionResetToken) { _, _ in
+            // 网页数据已清除，旧会话的登录态不再可信。
+            if case .connected = sessionState { disconnectSession() }
+        }
+        .onChange(of: settings.historyList.map(\.id)) { _, ids in
+            // 当前会话的记录被删除或清空后，账户选择已无处保存，直接结束会话。
+            if let sessionRecordID, !ids.contains(sessionRecordID), case .connected = sessionState {
+                disconnectSession()
+            }
+        }
     }
 
     private func sessionShell(url: URL) -> some View {
@@ -285,32 +305,35 @@ public struct MainContainerView: View {
             settings: settings,
             title: activeDeviceTitle,
             userAgent: settings.activeUserAgent,
-            onAccountIdentified: { name in
-                if let id = settings.activeAccountId {
-                    settings.updateAccountInfo(id: id, accountName: name)
-                }
-            },
+            onAccountIdentified: handleIdentifiedAccount,
+            onAcceptCurrentAccount: acceptCurrentAccount,
             onBack: returnToLobby,
             onDisconnect: disconnectSession
         )
     }
 
     private var activeDeviceTitle: String {
-        if let id = settings.activeAccountId,
+        if let id = sessionRecordID,
            let record = settings.historyList.first(where: { $0.id == id }) {
             return record.displayName
         }
         return "远程会话"
     }
 
+    /// 对话或项目列表成功同步，说明当前账号确实能访问这台电脑。
+    private var workspaceConfirmed: Bool {
+        webViewModel.conversationSupported || !webViewModel.projects.isEmpty
+    }
+
     // MARK: - Lifecycle
 
     private func connectToSession(url: URL) {
-        // 如果已有活跃连接，且连接目标是同一个 URL：瞬间直接切回会话界面，无需重新握手加载
-        if case .connected(let existingURL) = sessionState, existingURL == url {
-            if let id = settings.activeAccountId {
-                settings.updateAccountStatus(id: id, status: .connected)
-            }
+        let effectiveURL = url
+        let recordID = settings.activeAccountId
+
+        // 如果已有活跃连接，且连接目标是同一台设备的同一 URL：瞬间直接切回会话界面，无需重新握手加载
+        if case .connected(let existingURL) = sessionState, existingURL == effectiveURL, recordID == sessionRecordID {
+            syncSessionStatus(webViewModel.health)
             withAnimation(DesignToken.fade) {
                 isShowingConversation = true
             }
@@ -318,36 +341,114 @@ public struct MainContainerView: View {
         }
 
         // 新建连接或切换不同设备
-        webViewModel.currentURL = url
-        webViewModel.loadError = nil
+        let model = webViewModel
+        webViewModel.onAccountRouteChanged = { [weak settings] url, recordID in
+            // 推测的账号还没被证明可用，先不把它写成这台电脑的偏好。
+            guard !model.accountWasGuessed else { return }
+            settings?.recordAccountRoute(url, for: recordID)
+        }
+        webViewModel.onAccountSelected = { [weak settings] url, recordID in
+            settings?.selectAccountRoute(url, for: recordID)
+        }
+        sessionRecordID = recordID
+        pendingIdentifiedEmail = nil
         webViewModel.resetConversation()
+        webViewModel.loadError = nil
+        webViewModel.health = .loading
+        webViewModel.load(effectiveURL, connectionID: recordID,
+                          guessedAccount: settings.lastPreparedAccountSource == .guessed)
 
-        if let id = settings.activeAccountId {
-            settings.updateAccountStatus(id: id, status: .connected)
+        if let recordID {
+            settings.updateSessionStatus(id: recordID, status: .connecting)
         }
 
-        sessionState = .connected(url: url)
+        sessionState = .connected(url: effectiveURL)
         withAnimation(DesignToken.fade) {
             isShowingConversation = true
         }
     }
 
-    /// 返回连接大厅（将会话保持在后台存活，不销毁连接，大厅保持绿色在线状态）
+    /// 大厅里的“已连接”只反映网页真实状态：加载中/待登录为连接中，失败或实例断开为未连接。
+    private func syncSessionStatus(_ health: SessionHealth) {
+        guard let id = sessionRecordID, case .connected = sessionState else { return }
+        let status: ConnectionStatus
+        switch health {
+        case .ready: status = .connected
+        case .failed: status = .disconnected
+        case .loading, .signIn: status = .connecting
+        }
+        settings.updateSessionStatus(id: id, status: status)
+    }
+
+    private func handleIdentifiedAccount(_ account: IdentifiedAccount) {
+        guard let id = account.connectionID ?? sessionRecordID else { return }
+        if webViewModel.accountWasGuessed {
+            pendingIdentifiedEmail = account.email
+            return
+        }
+        if !account.matchesPreference {
+            // 纠正重试后仍落在别的编号：不覆盖偏好，请用户决定。
+            if let expected = settings.historyList.first(where: { $0.id == id })?.googleSessionIndex {
+                webViewModel.accountNotice = .notRestored(expectedIndex: expected, current: account.email)
+            }
+            return
+        }
+        switch settings.recordIdentifiedAccount(account.email, for: id) {
+        case .recorded:
+            if case .mismatch = webViewModel.accountNotice { webViewModel.accountNotice = nil }
+        case .mismatch(let expected):
+            webViewModel.accountNotice = .mismatch(expected: expected, current: account.email)
+        }
+    }
+
+    /// 用户确认以当前页面账号为准。
+    private func acceptCurrentAccount() {
+        guard let id = sessionRecordID, let notice = webViewModel.accountNotice else { return }
+        switch notice {
+        case .mismatch(_, let current):
+            settings.recordSuccessfulLogin(account: current, for: id)
+        case .notRestored(_, let current):
+            if let url = webViewModel.currentURL {
+                settings.adoptCurrentAccount(url: url, email: current, for: id)
+            }
+            webViewModel.adoptCurrentAccount()
+        }
+        webViewModel.accountNotice = nil
+    }
+
+    /// 推测的账号成功同步到对话或项目后，才保存为这台电脑的偏好。
+    private func confirmGuessedAccount() {
+        guard webViewModel.accountWasGuessed, let id = sessionRecordID else { return }
+        webViewModel.accountWasGuessed = false
+        if let url = webViewModel.currentURL {
+            settings.recordAccountRoute(url, for: id)
+        }
+        if let email = pendingIdentifiedEmail {
+            _ = settings.recordIdentifiedAccount(email, for: id)
+            pendingIdentifiedEmail = nil
+        }
+    }
+
+    /// 返回连接大厅（将会话保持在后台存活，不销毁连接，大厅保持在线状态）
     private func returnToLobby() {
         withAnimation(DesignToken.fade) {
             isShowingConversation = false
         }
     }
 
-    /// 彻底断开连接（终止后台会话，释放资源，大厅状态切为已断开）
+    /// 彻底断开连接（终止后台会话，释放资源，大厅状态切为未连接）
     private func disconnectSession() {
-        if let id = settings.activeAccountId {
-            settings.updateAccountStatus(id: id, status: .disconnected)
+        if let id = sessionRecordID {
+            settings.updateSessionStatus(id: id, status: .disconnected)
         }
         withAnimation(DesignToken.fade) {
             isShowingConversation = false
             sessionState = .disconnected
         }
+        sessionRecordID = nil
+        pendingIdentifiedEmail = nil
         webViewModel.resetConversation()
+        webViewModel.accountNotice = nil
+        webViewModel.accountWasGuessed = false
     }
 }

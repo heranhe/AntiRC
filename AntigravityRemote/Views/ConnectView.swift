@@ -18,9 +18,9 @@ public struct ConnectView: View {
     @State private var showSettings = false
     @State private var showHistory = false
     @State private var showDemo = false
-    @State private var clipboardCandidateURL: String?
-    @State private var isManualInputExpanded = false
-    @State private var manualInputURL = ""
+    /// 剪贴板里“可能有链接”。只检测模式，不读取内容，避免每次启动触发系统粘贴授权提示。
+    @State private var clipboardHasLink = false
+    @State private var clipboardInvalid = false
     @State private var editingRecord: ConnectionRecord?
     @State private var editingAliasText = ""
     @State private var showRenameAlert = false
@@ -54,15 +54,15 @@ public struct ConnectView: View {
             SettingsView(settings: settings)
         }
         .sheet(isPresented: $showHistory) {
-            HistoryView(settings: settings) { url in
-                initiateConnect(with: url)
+            HistoryView(settings: settings) { record in
+                initiateConnect(with: record.urlString, recordID: record.id)
             }
         }
         .fullScreenCover(isPresented: $showDemo) {
             DemoConversationView { showDemo = false }
         }
-        .alert("修改账户备注", isPresented: $showRenameAlert) {
-            TextField("输入自定义备注（如：工位 Mac）", text: $editingAliasText)
+        .alert("修改设备名称", isPresented: $showRenameAlert) {
+            TextField("输入自定义名称（如：工位 Mac）", text: $editingAliasText)
             Button("取消", role: .cancel) {}
             Button("保存") {
                 if let record = editingRecord {
@@ -71,7 +71,7 @@ public struct ConnectView: View {
                 }
             }
         } message: {
-            Text("为该账户或设备设置一个易于识别的名称")
+            Text("为这台电脑设置一个易于识别的名称，留空则恢复默认名称")
         }
         .onAppear {
             settings.updateIdleTimer()
@@ -629,12 +629,8 @@ public struct ConnectView: View {
             GeometryReader { proxy in
                 ScrollView {
                     VStack(spacing: 16) {
-                        if let clip = clipboardCandidateURL {
-                            clipboardBanner(url: clip)
-                        }
-
-                        if isManualInputExpanded {
-                            manualInputCard
+                        if clipboardHasLink {
+                            clipboardBanner
                         }
 
                         devicesSection
@@ -769,7 +765,7 @@ public struct ConnectView: View {
         let isConnected = record.status == .connected
         return Button {
             HapticManager.medium()
-            initiateConnect(with: record.urlString)
+            initiateConnect(with: record.urlString, recordID: record.id)
         } label: {
             HStack(spacing: 14) {
                 ZStack {
@@ -789,7 +785,7 @@ public struct ConnectView: View {
                             .lineLimit(1)
 
                         if isConnected {
-                            Text("已连通")
+                            Text("已连接")
                                 .font(.system(size: 10, weight: .semibold))
                                 .foregroundStyle(Color.green)
                                 .padding(.horizontal, 6)
@@ -859,84 +855,6 @@ public struct ConnectView: View {
                 .fill(status == .connected ? Color.green : DesignToken.textTertiary)
                 .frame(width: 8, height: 8)
         }
-    }
-
-    private var manualInputCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("连接地址")
-                .font(AppFont.subheadline(weight: .semibold))
-                .foregroundStyle(.white)
-
-            TextField("https://...", text: $manualInputURL)
-                .font(AppFont.mono(.caption))
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-                .keyboardType(.URL)
-                .padding(12)
-                .background(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(DesignToken.fillCode)
-                )
-                .foregroundStyle(.white)
-
-            PrimaryCapsuleButton(title: "连接") {
-                let trimmed = manualInputURL.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !trimmed.isEmpty else { return }
-                HapticManager.medium()
-                settings.saveConnection(urlString: trimmed)
-                initiateConnect(with: trimmed)
-            }
-        }
-        .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(DesignToken.fillCard)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(DesignToken.hairline, lineWidth: 1)
-        )
-    }
-
-    private var manualInputSheet: some View {
-        NavigationStack {
-            VStack(spacing: 16) {
-                TextField("https://...", text: $manualInputURL)
-                    .font(AppFont.mono(.caption))
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-                    .keyboardType(.URL)
-                    .padding(14)
-                    .background(
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .fill(DesignToken.fillCode)
-                    )
-                    .foregroundStyle(.white)
-
-                PrimaryCapsuleButton(title: "连接") {
-                    let trimmed = manualInputURL.trimmingCharacters(in: .whitespacesAndNewlines)
-                    guard !trimmed.isEmpty else { return }
-                    HapticManager.medium()
-                    settings.saveConnection(urlString: trimmed)
-                    isManualInputExpanded = false
-                    initiateConnect(with: trimmed)
-                }
-
-                Spacer()
-            }
-            .padding(24)
-            .background(DesignToken.screenBG.ignoresSafeArea())
-            .navigationTitle("输入连接地址")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") { isManualInputExpanded = false }
-                        .foregroundStyle(.white)
-                }
-            }
-        }
-        .preferredColorScheme(.dark)
-        .presentationDetents([.medium])
     }
 
     private var helpSection: some View {
@@ -1049,17 +967,17 @@ public struct ConnectView: View {
         }
     }
 
-    private func clipboardBanner(url: String) -> some View {
+    private var clipboardBanner: some View {
         HStack(spacing: 12) {
             Image(systemName: "doc.on.clipboard")
                 .font(.system(size: 16, weight: .medium))
                 .foregroundStyle(.white)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("检测到连接地址")
+                Text(clipboardInvalid ? "剪贴板里不是 Antigravity 连接地址" : "剪贴板中有链接")
                     .font(AppFont.caption(weight: .semibold))
                     .foregroundStyle(.white)
-                Text(url)
+                Text(clipboardInvalid ? "请在电脑端点击 copy link 后再试" : "点击连接后读取并校验地址")
                     .font(AppFont.caption2())
                     .foregroundStyle(DesignToken.textSecondary)
                     .lineLimit(1)
@@ -1067,15 +985,28 @@ public struct ConnectView: View {
 
             Spacer()
 
-            Button("连接") {
-                HapticManager.medium()
-                initiateConnect(with: url)
+            if !clipboardInvalid {
+                Button("连接") {
+                    HapticManager.medium()
+                    connectFromClipboard()
+                }
+                .font(AppFont.caption(weight: .semibold))
+                .foregroundStyle(.black)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(Capsule().fill(.white))
             }
-            .font(AppFont.caption(weight: .semibold))
-            .foregroundStyle(.black)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(Capsule().fill(.white))
+
+            Button {
+                withAnimation(DesignToken.fade) { dismissClipboardBanner() }
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(DesignToken.textSecondary)
+                    .frame(width: 32, height: 32)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("关闭剪贴板提示")
         }
         .padding(12)
         .background(
@@ -1091,15 +1022,42 @@ public struct ConnectView: View {
     // MARK: - Actions (security-preserving)
 
     private func detectClipboard() {
-        guard settings.hasCompletedOnboarding else { return }
-        guard settings.autoFillClipboard else { return }
-        guard UIPasteboard.general.hasStrings else { return }
-        if let string = UIPasteboard.general.string,
-           UserAgentHelper.isValidRemoteURL(string) {
-            withAnimation(DesignToken.fade) {
-                clipboardCandidateURL = string
+        guard settings.hasCompletedOnboarding, settings.autoFillClipboard else { return }
+        let pasteboard = UIPasteboard.general
+        guard pasteboard.hasStrings || pasteboard.hasURLs else { return }
+        let changeCount = pasteboard.changeCount
+        // 同一份剪贴板内容被关闭后不再重复提示。
+        guard changeCount != dismissedClipboardChangeCount else { return }
+        pasteboard.detectPatterns(for: [\.probableWebURL]) { result in
+            guard case .success(let patterns) = result, patterns.contains(\.probableWebURL) else { return }
+            DispatchQueue.main.async {
+                clipboardInvalid = false
+                withAnimation(DesignToken.fade) { clipboardHasLink = true }
             }
         }
+    }
+
+    @AppStorage("Antigravity_Dismissed_Clipboard_Change") private var dismissedClipboardChangeCount = -1
+
+    private func dismissClipboardBanner() {
+        dismissedClipboardChangeCount = UIPasteboard.general.changeCount
+        clipboardHasLink = false
+        clipboardInvalid = false
+    }
+
+    /// 用户点击“连接”后才读取剪贴板，并只接受 Antigravity 远程地址或局域网地址。
+    private func connectFromClipboard() {
+        let raw = UIPasteboard.general.url?.absoluteString ?? UIPasteboard.general.string ?? ""
+        let normalized = UserAgentHelper.normalizeRemoteURL(raw)
+        let isRemote = URL(string: normalized).map(AntigravityAccountRoute.isRemotePage) ?? false
+        guard UserAgentHelper.isValidRemoteURL(normalized),
+              isRemote || UserAgentHelper.isLocalNetworkAddress(normalized) else {
+            HapticManager.error()
+            withAnimation(DesignToken.fade) { clipboardInvalid = true }
+            return
+        }
+        dismissClipboardBanner()
+        initiateConnect(with: normalized)
     }
 
     private func handleScannedCode(_ code: String) {
@@ -1110,13 +1068,11 @@ public struct ConnectView: View {
             return
         }
         HapticManager.success()
-        settings.saveConnection(urlString: normalized)
         initiateConnect(with: normalized)
     }
 
-    private func initiateConnect(with urlString: String) {
-        let normalized = UserAgentHelper.normalizeRemoteURL(urlString)
-        settings.saveConnection(urlString: normalized)
-        onConnect(normalized)
+    private func initiateConnect(with urlString: String, recordID: UUID? = nil) {
+        guard let target = settings.prepareConnection(urlString: urlString, recordID: recordID) else { return }
+        onConnect(target.absoluteString)
     }
 }

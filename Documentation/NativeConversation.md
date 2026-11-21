@@ -51,3 +51,29 @@ xcodebuild -project AntigravityRemote.xcodeproj -scheme AntigravityRemote -sdk i
 Xcode Preview：`NativeConversationView.swift` 中的“原生对话 · Liquid Glass”。Debug 启动参数 `--native-conversation-preview` 可显示本地示例；不连接服务、不发送消息，Release 不包含该入口。
 
 实页验收：登录后切回原生、历史消息顺序、流式更新、发送一次只出现一条消息、停止回复、网页草稿冲突、断线重连、长代码横向滚动、键盘避让、深浅色与辅助功能大字号。
+
+## Google 账户冷启动恢复
+
+Antigravity 官方网页的 `ConfigService` 从 `location.pathname` 的 `/u/<数字>/` 前缀读取 `sessionIndex`，普通 `/r/<instance>` 路径默认为 `0`。仅添加 `authuser=<邮箱>` 不能保证远程服务使用同一账户。此行为于 2026-10-04 在官方主页加载的公开脚本中确认。
+
+- `WKWebView` 提交导航及 History API 改变 URL 后，将手机会话编号写入当前连接记录的 `googleSessionIndex`。
+- 历史记录、扫码和粘贴统一调用 `AppSettings.prepareConnection`，在首次请求之前生成 `/u/<编号>/r/<实例>`。
+- 登录中转页和没有编号的瞬时地址不会覆盖已有选择；账户编号独立于邮箱头像识别。
+- `WebViewModel.loadRequest` 表示主动加载命令，`currentURL` 仅记录页面地址，避免网页内跳转反过来触发重复加载。
+- Google 登录会话编号属于本机 Cookie 集合，不代表电脑端账户顺序；清除网页数据时一并清除编号。
+
+验证命令（`SIMULATOR_ID` 替换为可用模拟器 ID）：
+
+```bash
+node --test Tests/*.test.cjs
+xcodebuild -project AntigravityRemote.xcodeproj -scheme AntigravityRemote -destination "platform=iOS Simulator,id=SIMULATOR_ID" -derivedDataPath /tmp/antirc-cold-start-build CODE_SIGNING_ALLOWED=NO -only-testing:AntigravityRemoteTests/AccountRecoveryTests test
+```
+
+以下两条按顺序、分别执行，测试会确认写入和读取发生在不同 App 进程中：
+
+```bash
+xcodebuild -project AntigravityRemote.xcodeproj -scheme AntigravityRemote -destination "platform=iOS Simulator,id=SIMULATOR_ID" -derivedDataPath /tmp/antirc-cold-start-build CODE_SIGNING_ALLOWED=NO -only-testing:AntigravityRemoteTests/AccountColdProcessTests/testWriteAccountBeforeTermination test-without-building
+xcodebuild -project AntigravityRemote.xcodeproj -scheme AntigravityRemote -destination "platform=iOS Simulator,id=SIMULATOR_ID" -derivedDataPath /tmp/antirc-cold-start-build CODE_SIGNING_ALLOWED=NO -only-testing:AntigravityRemoteTests/AccountColdProcessTests/testRestoreInDifferentProcess test-without-building
+```
+
+以上验证使用本地页面和测试账户路径，不等同于真实 Google 多账户真机测试。升级后需先在手机网页选择一次目标账户，让新版本记录其数字编号，再彻底退出 App 验证重开。

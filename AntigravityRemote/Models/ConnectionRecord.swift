@@ -13,6 +13,15 @@ public enum ConnectionStatus: String, Codable, Equatable, Hashable {
     case disconnected = "已断开"
     case connecting = "连接中"
     
+    /// 界面文案。rawValue 已写入历史数据，不能修改，否则旧记录无法解码。
+    public var displayName: String {
+        switch self {
+        case .connected: return "已连接"
+        case .disconnected: return "未连接"
+        case .connecting: return "连接中"
+        }
+    }
+
     public var color: Color {
         switch self {
         case .connected:
@@ -33,6 +42,8 @@ public struct ConnectionRecord: Identifiable, Codable, Equatable, Hashable {
     public var deviceAlias: String?
     /// 绑定的 Google 账户名或邮箱（如“user@gmail.com”）
     public var accountName: String?
+    /// 此设备在手机 Google 登录会话中的编号，不是电脑端的账户编号。
+    public var googleSessionIndex: String?
     /// 连接状态（已登录、已断开、连接中）
     public var status: ConnectionStatus
     /// 远程控制 URL 字符串
@@ -46,6 +57,7 @@ public struct ConnectionRecord: Identifiable, Codable, Equatable, Hashable {
         id: UUID = UUID(),
         deviceAlias: String? = nil,
         accountName: String? = nil,
+        googleSessionIndex: String? = nil,
         status: ConnectionStatus = .disconnected,
         urlString: String,
         createdAt: Date = Date(),
@@ -54,6 +66,7 @@ public struct ConnectionRecord: Identifiable, Codable, Equatable, Hashable {
         self.id = id
         self.deviceAlias = deviceAlias
         self.accountName = accountName
+        self.googleSessionIndex = googleSessionIndex
         self.status = status
         self.urlString = urlString
         self.createdAt = createdAt
@@ -67,6 +80,7 @@ public struct ConnectionRecord: Identifiable, Codable, Equatable, Hashable {
         case title
         case deviceAlias
         case accountName
+        case googleSessionIndex
         case status
         case urlString
         case createdAt
@@ -79,6 +93,7 @@ public struct ConnectionRecord: Identifiable, Codable, Equatable, Hashable {
         self.urlString = try container.decode(String.self, forKey: .urlString)
         self.deviceAlias = try container.decodeIfPresent(String.self, forKey: .deviceAlias)
         self.accountName = try container.decodeIfPresent(String.self, forKey: .accountName)
+        self.googleSessionIndex = try container.decodeIfPresent(String.self, forKey: .googleSessionIndex)
         self.status = try container.decodeIfPresent(ConnectionStatus.self, forKey: .status) ?? .disconnected
         self.createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt) ?? Date()
         self.lastUsedAt = try container.decodeIfPresent(Date.self, forKey: .lastUsedAt) ?? Date()
@@ -96,6 +111,7 @@ public struct ConnectionRecord: Identifiable, Codable, Equatable, Hashable {
         try container.encode(id, forKey: .id)
         try container.encode(deviceAlias, forKey: .deviceAlias)
         try container.encode(accountName, forKey: .accountName)
+        try container.encodeIfPresent(googleSessionIndex, forKey: .googleSessionIndex)
         try container.encode(status, forKey: .status)
         try container.encode(urlString, forKey: .urlString)
         try container.encode(createdAt, forKey: .createdAt)
@@ -153,12 +169,15 @@ public struct ConnectionRecord: Identifiable, Codable, Equatable, Hashable {
                 return sanitized
             }
         }
+        if let index = googleSessionIndex {
+            return "Google 账号 #\(index) · 尚未识别邮箱"
+        }
         if isGoogleAccount {
-            return "已连接账户"
+            return "Google 账号尚未识别"
         }
         return "Antigravity 工作区"
     }
-    
+
     /// 获取在界面上呈现的核心主标题
     public var displayName: String {
         deviceTitle
@@ -168,23 +187,5 @@ public struct ConnectionRecord: Identifiable, Codable, Equatable, Hashable {
     public var isGoogleAccount: Bool {
         urlString.lowercased().contains("google.com") ||
         (accountName != nil && !accountName!.isEmpty)
-    }
-    
-    /// 智能友好名称生成
-    public static func smartFriendlyName(for urlString: String) -> String {
-        let lower = urlString.lowercased()
-        if lower.contains("accounts.google.com") {
-            return "我的 Mac 电脑"
-        }
-        guard let url = URL(string: urlString) else {
-            return "Antigravity 远程实例"
-        }
-        if let host = url.host {
-            if host == "localhost" || host == "127.0.0.1" {
-                return "本地 Antigravity 智能体"
-            }
-            return "\(host) 远程实例"
-        }
-        return "Antigravity 远程工作区"
     }
 }

@@ -235,6 +235,20 @@ public struct QRScannerView: View {
             .padding(.horizontal, 22)
             .padding(.vertical, 14)
             .background(Capsule().fill(.white))
+
+            // 不授权相机时，仍可粘贴电脑端 copy link 的地址
+            Button {
+                HapticManager.light()
+                showManualInputSheet = true
+            } label: {
+                Label("手动输入连接地址", systemImage: "keyboard")
+                    .font(AppFont.subheadline(weight: .semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 22)
+                    .padding(.vertical, 12)
+                    .background(Capsule().fill(Color.white.opacity(0.12)))
+            }
+            .accessibilityIdentifier("manualInputFromPermission")
         }
     }
 

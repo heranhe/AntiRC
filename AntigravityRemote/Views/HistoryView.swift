@@ -10,12 +10,12 @@ import SwiftUI
 /// 历史连接列表视图
 public struct HistoryView: View {
     @ObservedObject public var settings: AppSettings
-    public var onSelect: (String) -> Void
+    public var onSelect: (ConnectionRecord) -> Void
     @Environment(\.dismiss) private var dismiss
     
     @State private var showingClearAlert = false
     
-    public init(settings: AppSettings, onSelect: @escaping (String) -> Void) {
+    public init(settings: AppSettings, onSelect: @escaping (ConnectionRecord) -> Void) {
         self.settings = settings
         self.onSelect = onSelect
     }
@@ -46,7 +46,7 @@ public struct HistoryView: View {
                             Button {
                                 HapticManager.medium()
                                 dismiss()
-                                onSelect(record.urlString)
+                                onSelect(record)
                             } label: {
                                 HStack(spacing: 12) {
                                     Image(systemName: "antenna.radiowaves.left.and.right")
@@ -68,7 +68,7 @@ public struct HistoryView: View {
                                                 Circle()
                                                     .fill(record.status.color)
                                                     .frame(width: 6, height: 6)
-                                                Text(record.status.rawValue)
+                                                Text(record.status.displayName)
                                                     .font(.system(size: 11, weight: .medium))
                                                     .foregroundColor(record.status.color)
                                             }

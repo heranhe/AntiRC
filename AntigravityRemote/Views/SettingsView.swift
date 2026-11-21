@@ -14,6 +14,8 @@ public struct SettingsView: View {
     
     @State private var showingClearCacheSuccess = false
     @State private var showingClearCacheAlert = false
+    @State private var accountDiagnosticReport: String?
+    @State private var showingAccountDiagnostics = false
     
     public init(settings: AppSettings) {
         self.settings = settings
@@ -91,7 +93,7 @@ public struct SettingsView: View {
                 // User-Agent 兼容性
                 Section(
                     header: Text("浏览器内核与登录兼容 (User-Agent)"),
-                    footer: Text("Google 账号登录会交给系统 Safari 完成，和手机 Safari 共用登录状态，因此不会再卡在蓝牙验证。这里的 User-Agent 只影响其他网页。")
+                    footer: Text("网页使用 App 内的 WebKit 登录状态，与系统 Safari 分开保存。User-Agent 用于调整网页兼容性，不能同步电脑或 Safari 的当前账户。")
                 ) {
                     Picker("User-Agent 预设", selection: $settings.userAgentPreset) {
                         ForEach(UserAgentPreset.allCases) { preset in
@@ -129,6 +131,13 @@ public struct SettingsView: View {
                 }
                 
                 // 关于信息
+                Section(header: Text("连接诊断"), footer: Text("仅保留本机最近 120 条账户编号与跳转阶段，不记录邮箱、Cookie、完整网址或令牌。复现问题后可打开并复制。")) {
+                    Button("查看账户恢复诊断") {
+                        accountDiagnosticReport = AccountDiagnostics.shared.report
+                        showingAccountDiagnostics = true
+                    }
+                }
+
                 Section(header: Text("关于")) {
                     HStack {
                         Spacer()
@@ -164,12 +173,33 @@ public struct SettingsView: View {
                     HStack {
                         Text("当前版本")
                         Spacer()
-                        Text("1.0.0 (Build 1)")
+                        Text(AccountDiagnostics.appVersion)
                             .foregroundColor(.secondary)
                     }
                 }
             }
             .navigationTitle("偏好设置")
+            .sheet(isPresented: $showingAccountDiagnostics) {
+                NavigationStack {
+                    ScrollView {
+                        Text(accountDiagnosticReport ?? "")
+                            .font(.system(.caption, design: .monospaced))
+                            .textSelection(.enabled)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding()
+                    }
+                    .navigationTitle("账户恢复诊断")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .topBarLeading) {
+                            Button("复制") { UIPasteboard.general.string = accountDiagnosticReport }
+                        }
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("完成") { showingAccountDiagnostics = false }
+                        }
+                    }
+                }
+            }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {

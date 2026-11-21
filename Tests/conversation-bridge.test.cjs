@@ -48,6 +48,7 @@ function page({ supported = true, draft = '', disabled = false, running = false 
         location: { hostname: 'example.test' },
         document: {
             documentElement: {},
+            addEventListener() {},
             querySelector(selector) {
                 if (selector.includes('conversation-view')) return null;
                 if (selector.includes('data-cascade-id')) return supported ? root : null;
@@ -169,6 +170,7 @@ test('official home reads projects and the real composer, not a conversation row
     editor.closest = selector => selector.includes('dialog') || selector.includes('aria-hidden') || selector.includes('[inert]') ? null : composer;
     const document = make('div', {}, [header, row, seeAll, composer]);
     document.documentElement = document;
+    document.addEventListener = () => {};
     document.querySelector = selector => {
         if (selector.includes('conversation-view')) return null;
         if (selector.includes('data-cascade-id') && !selector.includes('conversation-row-')) return row;

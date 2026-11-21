@@ -2,7 +2,7 @@
 //  FloatingToolbarView.swift
 //  AntigravityRemote
 //
-//  可自由拖拽、边缘吸附的半透明原生悬浮控制台
+//  可自由拖拽、边缘吸附的半透明原生悬浮控制球；展开的操作面板固定在屏幕底部，不会被挤出屏幕
 //
 
 import SwiftUI
@@ -12,224 +12,198 @@ public struct FloatingToolbarView: View {
     @ObservedObject public var webViewModel: WebViewModel
     @ObservedObject public var settings: AppSettings
     public var onDisconnect: () -> Void
-    
-    @State private var isExpanded: Bool = false
-    @State private var showKeypad: Bool = false
-    @State private var offset: CGSize = CGSize(width: 320, height: 600)
+
+    @State private var isExpanded = false
+    @State private var showKeypad = false
+    /// 控制球中心点；nil 表示尚未根据屏幕尺寸初始化。
+    @State private var center: CGPoint?
     @State private var dragTranslation: CGSize = .zero
-    @State private var isDragging: Bool = false
-    @State private var copiedNotice: Bool = false
-    @State private var hasInitializedPosition: Bool = false
-    
+    @State private var isDragging = false
+    @State private var copiedNotice = false
+
+    private let ballSize: CGFloat = 50
+    private let edgeInset: CGFloat = 12
+
     public init(webViewModel: WebViewModel, settings: AppSettings, onDisconnect: @escaping () -> Void) {
         self.webViewModel = webViewModel
         self.settings = settings
         self.onDisconnect = onDisconnect
     }
-    
+
     public var body: some View {
         GeometryReader { proxy in
-            let screenSize = proxy.size
-            
-            ZStack(alignment: .topLeading) {
-                // 浮动按钮与菜单
-                VStack(alignment: .trailing, spacing: 10) {
-                    if isExpanded {
-                        // 展开的操作面板
-                        expandedMenuView
-                            .transition(.scale(scale: 0.8, anchor: .bottomTrailing).combined(with: .opacity))
-                    }
-                    
-                    if showKeypad && isExpanded {
-                        // 终端辅助键盘条
-                        terminalKeypadView
-                            .transition(.move(edge: .trailing).combined(with: .opacity))
-                    }
-                    
-                    // 浮动主按钮（胶囊球）
-                    mainFloatingButton
-                }
-                .opacity(isDragging ? 1.0 : (isExpanded ? 1.0 : 0.4))
-                .offset(
-                    x: min(max(16, offset.width + dragTranslation.width), screenSize.width - 68),
-                    y: min(max(60, offset.height + dragTranslation.height), screenSize.height - 120)
-                )
-                .gesture(
-                    DragGesture()
-                        .onChanged { value in
-                            isDragging = true
-                            dragTranslation = value.translation
+            let size = proxy.size
+            ZStack {
+                if isExpanded {
+                    // 点击空白处收起面板
+                    Color.black.opacity(0.001)
+                        .contentShape(Rectangle())
+                        .onTapGesture { collapse() }
+
+                    VStack(spacing: 10) {
+                        Spacer()
+                        if copiedNotice {
+                            Text("已复制链接")
+                                .font(.caption2.bold())
+                                .foregroundColor(.green)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 5)
+                                .background(.ultraThinMaterial, in: Capsule())
                         }
-                        .onEnded { value in
-                            isDragging = false
-                            HapticManager.selection()
-                            let finalX = offset.width + value.translation.width
-                            let finalY = offset.height + value.translation.height
-                            dragTranslation = .zero
-                            
-                            // 边缘吸附计算：吸附到左侧或右侧
-                            let snapToRight = finalX > screenSize.width / 2
-                            let targetX: CGFloat = snapToRight ? (screenSize.width - 68) : 16
-                            let targetY = min(max(70, finalY), screenSize.height - 140)
-                            
-                            withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
-                                offset = CGSize(width: targetX, height: targetY)
-                            }
+                        if showKeypad {
+                            terminalKeypadView
+                                .transition(.move(edge: .bottom).combined(with: .opacity))
                         }
-                )
-                .onAppear {
-                    if !hasInitializedPosition {
-                        // 初始默认停靠在右下角偏上位置，绝不挡住正中间的输入框或按钮
-                        offset = CGSize(width: screenSize.width - 68, height: max(120, screenSize.height - 180))
-                        hasInitializedPosition = true
+                        actionPanel
                     }
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, ballSize + 28)
+                    .transition(.opacity)
                 }
+
+                mainFloatingButton
+                    .position(clampedCenter(in: size))
+                    .gesture(dragGesture(in: size))
+                    .onAppear {
+                        if center == nil {
+                            // 默认停靠在右下方，避开底部输入框与 Home 指示条
+                            center = CGPoint(x: size.width - edgeInset - ballSize / 2, y: size.height * 0.62)
+                        }
+                    }
             }
         }
+        .ignoresSafeArea(.keyboard)
     }
-    
+
+    private func clampedCenter(in size: CGSize) -> CGPoint {
+        let base = center ?? CGPoint(x: size.width - edgeInset - ballSize / 2, y: size.height * 0.62)
+        let half = ballSize / 2
+        return CGPoint(
+            x: min(max(half + edgeInset, base.x + dragTranslation.width), size.width - half - edgeInset),
+            y: min(max(half + 8, base.y + dragTranslation.height), size.height - half - 8)
+        )
+    }
+
+    private func dragGesture(in size: CGSize) -> some Gesture {
+        DragGesture(minimumDistance: 6)
+            .onChanged { value in
+                isDragging = true
+                dragTranslation = value.translation
+            }
+            .onEnded { _ in
+                let current = clampedCenter(in: size)
+                dragTranslation = .zero
+                isDragging = false
+                HapticManager.selection()
+                // 边缘吸附：吸附到左侧或右侧
+                let snapX = current.x > size.width / 2
+                    ? size.width - edgeInset - ballSize / 2
+                    : edgeInset + ballSize / 2
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+                    center = CGPoint(x: snapX, y: current.y)
+                }
+            }
+    }
+
+    private func collapse() {
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
+            isExpanded = false
+            showKeypad = false
+        }
+    }
+
     /// 浮动主触发按钮
     private var mainFloatingButton: some View {
         Button {
             HapticManager.medium()
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                isExpanded.toggle()
-                if !isExpanded {
-                    showKeypad = false
-                }
+            if isExpanded { collapse() } else {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) { isExpanded = true }
             }
         } label: {
             ZStack {
                 Circle()
                     .fill(.ultraThinMaterial)
-                    .frame(width: 50, height: 50)
+                    .frame(width: ballSize, height: ballSize)
                     .shadow(color: .black.opacity(0.25), radius: 6, x: 0, y: 3)
                     .overlay(
                         Circle()
                             .stroke(LinearGradient(colors: [.blue.opacity(0.7), .purple.opacity(0.6)], startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1.5)
                     )
-                
                 Image(systemName: isExpanded ? "xmark" : "dot.scope")
                     .font(.system(size: 19, weight: .bold))
                     .foregroundColor(.primary)
-                    .rotationEffect(.degrees(isExpanded ? 90 : 0))
             }
+            .opacity(isDragging || isExpanded ? 1 : 0.55)
         }
+        .accessibilityLabel(isExpanded ? "收起控制面板" : "打开控制面板")
     }
-    
-    /// 展开的操作菜单
-    private var expandedMenuView: some View {
-        VStack(spacing: 8) {
-            // 复制当前链接提示
-            if copiedNotice {
-                Text("已复制链接")
-                    .font(.caption2.bold())
-                    .foregroundColor(.green)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(.ultraThinMaterial)
-                    .cornerRadius(8)
-            }
-            
-            VStack(spacing: 6) {
-                // 刷新
+
+    /// 展开的操作面板（横向滚动，适配窄屏）
+    private var actionPanel: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 6) {
                 menuActionButton(icon: "arrow.clockwise", label: "刷新") {
                     HapticManager.heavy()
                     webViewModel.reload()
                 }
-                
-                // 网页后退
                 menuActionButton(icon: "chevron.left", label: "后退", disabled: !webViewModel.canGoBack) {
                     HapticManager.light()
                     webViewModel.goBack()
                 }
-                
-                // 终端快捷键面板开关
                 menuActionButton(icon: "terminal.fill", label: "终端键", active: showKeypad) {
                     HapticManager.light()
-                    withAnimation(.spring()) {
-                        showKeypad.toggle()
-                    }
+                    withAnimation(.spring()) { showKeypad.toggle() }
                 }
-                
-                // 灵动岛/全屏沉浸切换
                 menuActionButton(
                     icon: settings.enableSafeAreas ? "arrow.up.left.and.arrow.down.right" : "arrow.down.right.and.arrow.up.left",
                     label: settings.enableSafeAreas ? "沉浸全屏" : "避让边距"
                 ) {
                     HapticManager.medium()
-                    withAnimation {
-                        settings.enableSafeAreas.toggle()
-                    }
+                    withAnimation { settings.enableSafeAreas.toggle() }
                 }
-                
-                // 复制链接
-                menuActionButton(icon: "link", label: "复制链接") {
+                menuActionButton(icon: "link", label: "复制链接", disabled: webViewModel.currentURL == nil) {
                     HapticManager.light()
-                    if let urlString = webViewModel.currentURL?.absoluteString {
-                        UIPasteboard.general.string = urlString
-                        withAnimation {
-                            copiedNotice = true
-                        }
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                            withAnimation { copiedNotice = false }
-                        }
+                    guard let urlString = webViewModel.currentURL?.absoluteString else { return }
+                    UIPasteboard.general.string = urlString
+                    withAnimation { copiedNotice = true }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                        withAnimation { copiedNotice = false }
                     }
                 }
-                
-                // 暂时隐藏悬浮球
-                menuActionButton(icon: "eye.slash", label: "隐藏悬浮球") {
+                menuActionButton(icon: "eye.slash", label: "隐藏") {
                     HapticManager.light()
-                    withAnimation {
-                        isExpanded = false
-                        settings.showFloatingButton = false
-                    }
+                    collapse()
+                    settings.showFloatingButton = false
                 }
-                
-                Divider()
-                    .padding(.vertical, 2)
-                
-                // 断开会话回到大厅
-                menuActionButton(icon: "power", label: "断开连接", isDestructive: true) {
+                menuActionButton(icon: "power", label: "断开", isDestructive: true) {
                     HapticManager.heavy()
+                    collapse()
                     onDisconnect()
                 }
             }
             .padding(8)
-            .background(.ultraThinMaterial)
-            .cornerRadius(16)
-            .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 4)
         }
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 4)
     }
-    
+
     /// 终端辅助键盘条（手机上操作 CLI 必备）
     private var terminalKeypadView: some View {
-        HStack(spacing: 8) {
-            terminalKeyButton(label: "Ctrl+C") {
-                webViewModel.sendKey(key: "c", ctrl: true)
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                terminalKeyButton(label: "Ctrl+C") { webViewModel.sendKey(key: "c", ctrl: true) }
+                terminalKeyButton(label: "Esc") { webViewModel.sendKey(key: "Escape") }
+                terminalKeyButton(label: "Enter") { webViewModel.sendKey(key: "Enter") }
+                terminalKeyButton(label: "Tab") { webViewModel.sendKey(key: "Tab") }
+                terminalKeyButton(label: "↑") { webViewModel.sendKey(key: "ArrowUp") }
+                terminalKeyButton(label: "↓") { webViewModel.sendKey(key: "ArrowDown") }
             }
-            terminalKeyButton(label: "Esc") {
-                webViewModel.sendKey(key: "Escape", ctrl: false)
-            }
-            terminalKeyButton(label: "Enter") {
-                webViewModel.sendKey(key: "Enter", ctrl: false)
-            }
-            terminalKeyButton(label: "Tab") {
-                webViewModel.sendKey(key: "Tab", ctrl: false)
-            }
-            terminalKeyButton(label: "↑") {
-                webViewModel.sendKey(key: "ArrowUp", ctrl: false)
-            }
-            terminalKeyButton(label: "↓") {
-                webViewModel.sendKey(key: "ArrowDown", ctrl: false)
-            }
+            .padding(8)
         }
-        .padding(8)
-        .background(.ultraThinMaterial)
-        .cornerRadius(14)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .shadow(color: .black.opacity(0.15), radius: 6, x: 0, y: 3)
     }
-    
+
     private func menuActionButton(
         icon: String,
         label: String,
@@ -239,39 +213,34 @@ public struct FloatingToolbarView: View {
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
-            HStack(spacing: 8) {
+            VStack(spacing: 4) {
                 Image(systemName: icon)
-                    .font(.system(size: 14, weight: .semibold))
-                    .frame(width: 20)
+                    .font(.system(size: 16, weight: .semibold))
                 Text(label)
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.system(size: 11, weight: .medium))
             }
             .foregroundColor(
                 disabled ? .gray.opacity(0.5) :
                 isDestructive ? .red :
                 active ? .blue : .primary
             )
-            .padding(.horizontal, 8)
-            .padding(.vertical, 6)
-            .frame(minWidth: 100, alignment: .leading)
-            .background(active ? Color.blue.opacity(0.15) : Color.clear)
-            .cornerRadius(8)
+            .frame(minWidth: 56, minHeight: 48)
+            .background(active ? Color.blue.opacity(0.15) : Color.clear, in: RoundedRectangle(cornerRadius: 10))
         }
         .disabled(disabled)
     }
-    
+
     private func terminalKeyButton(label: String, action: @escaping () -> Void) -> some View {
         Button {
             HapticManager.light()
             action()
         } label: {
             Text(label)
-                .font(.system(size: 12, weight: .bold, design: .monospaced))
+                .font(.system(size: 13, weight: .bold, design: .monospaced))
                 .foregroundColor(.primary)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
-                .background(Color.secondary.opacity(0.2))
-                .cornerRadius(6)
+                .padding(.horizontal, 12)
+                .frame(minHeight: 36)
+                .background(Color.secondary.opacity(0.2), in: RoundedRectangle(cornerRadius: 8))
         }
     }
 }
