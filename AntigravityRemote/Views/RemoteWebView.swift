@@ -281,6 +281,8 @@ public struct RemoteWebView: UIViewRepresentable {
 
         // 采用持久化数据仓库，保存登录态和 Cookie
         config.websiteDataStore = .default()
+        // 标准预设不再手拼 UA：系统部分由 WebKit 生成，只追加 Safari 标记。
+        config.applicationNameForUserAgent = UserAgentHelper.safariApplicationName()
 
         // 注入自适应 Viewport 与 CSS 脚本
         let viewportScriptSource = """
@@ -306,10 +308,11 @@ public struct RemoteWebView: UIViewRepresentable {
         config.userContentController.addUserScript(userScript)
 
         // Google 账号页兼容脚本：隐藏内嵌特征、避开蓝牙通行密钥拦截（防 403 / 蓝牙引导）
+        // 也注入子 frame：Google 的 Cookie 轮换等 accounts.google.com iframe 同样不应看到内嵌特征。
         let googleCompatScript = WKUserScript(
             source: GoogleSignInGate.compatibilityScript,
             injectionTime: .atDocumentStart,
-            forMainFrameOnly: true
+            forMainFrameOnly: false
         )
         config.userContentController.addUserScript(googleCompatScript)
 
@@ -339,8 +342,8 @@ public struct RemoteWebView: UIViewRepresentable {
         webView.backgroundColor = .black
         webView.scrollView.backgroundColor = .black
 
-        // 设置合规 User-Agent，规避 Google OAuth 403 disallowed_useragent
-        webView.customUserAgent = userAgent
+        // 只有桌面版/自定义预设才覆盖整条 UA。
+        webView.customUserAgent = Self.customUserAgent(for: userAgent)
 
         // 允许边缘侧滑前进后退
         webView.allowsBackForwardNavigationGestures = true
@@ -372,8 +375,9 @@ public struct RemoteWebView: UIViewRepresentable {
     public func updateUIView(_ uiView: WKWebView, context: Context) {
         context.coordinator.parent = self
         // 如果 UA 发生改变，实时刷新 UA
-        if uiView.customUserAgent != userAgent {
-            uiView.customUserAgent = userAgent
+        let desiredUserAgent = Self.customUserAgent(for: userAgent)
+        if uiView.customUserAgent != desiredUserAgent {
+            uiView.customUserAgent = desiredUserAgent
         }
         // 如果切换到了不同的新 URL，才触发重新加载；同一 URL 保持不变，实现 0 秒瞬间恢复
         if let request = viewModel.loadRequest,
@@ -391,6 +395,12 @@ public struct RemoteWebView: UIViewRepresentable {
         uiView.uiDelegate = nil
     }
 
+    /// 空字符串交还 WebKit 默认 UA（带 Safari 标记）。
+    static func customUserAgent(for value: String) -> String? {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
+    }
+
     static let disconnectedHint = "请确认电脑端已登录同一个 Google 账号，并且 Antigravity 正在运行。"
 
     public class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandler {
@@ -404,6 +414,9 @@ public struct RemoteWebView: UIViewRepresentable {
         /// 用户在 Google 登录/账号页面中主动操作过（点链接、提交表单、打开弹窗）。
         /// 回到远程页面时，落地账号即为用户的新选择，不再被旧偏好拉回。
         private(set) var userAccountFlow = false
+        /// 纠正重试发出后、回到远程页面前，记下重试前的落地页。
+        /// 重试若被 Google 带去登录页，说明这个编号已不在本机登录账号中，应放弃而不是让用户再登一次。
+        private var recoveryFallbackURL: URL?
 
         func load(_ request: WebLoadRequest, in webView: WKWebView) {
             loadedRequestID = request.id
@@ -416,6 +429,7 @@ public struct RemoteWebView: UIViewRepresentable {
             // 推测的编号不做纠正重试：新电脑可能本就属于其他账号。
             attemptedAccountRecovery = request.guessedAccount
             userAccountFlow = false
+            recoveryFallbackURL = nil
             AccountDiagnostics.shared.record(.loadRequested, url: target)
             webView.load(URLRequest(url: target, cachePolicy: .useProtocolCachePolicy, timeoutInterval: 30))
         }
@@ -442,6 +456,7 @@ public struct RemoteWebView: UIViewRepresentable {
             preferredSessionIndex = index
             attemptedAccountRecovery = false
             userAccountFlow = false
+            recoveryFallbackURL = nil
             parent.viewModel.onAccountSelected?(target, connectionID)
             parent.viewModel.dismissConnectionNotice()
             parent.viewModel.accountWasGuessed = false
@@ -687,6 +702,7 @@ public struct RemoteWebView: UIViewRepresentable {
                 components.queryItems = [URLQueryItem(name: "continue", value: landing.absoluteString)]
                 guard let url = components.url else { return }
                 self.userAccountFlow = true
+                self.recoveryFallbackURL = nil
                 self.awaitingCommit = true
                 webView.load(URLRequest(url: url))
             }
@@ -698,6 +714,7 @@ public struct RemoteWebView: UIViewRepresentable {
                 self.attemptedAccountRecovery = true
                 // 退出后网页会引导重新登录，登录后落地的账号即为新的选择。
                 self.userAccountFlow = true
+                self.recoveryFallbackURL = nil
                 self.awaitingCommit = true
                 webView.load(URLRequest(url: landing))
             }
@@ -796,6 +813,7 @@ public struct RemoteWebView: UIViewRepresentable {
             }
             if GoogleSignInGate.isAccountLogin(url), userInitiated {
                 userAccountFlow = true
+                recoveryFallbackURL = nil
             }
             if AntigravityAccountRoute.isRemotePage(url) {
                 // 账号菜单可能以点击、重定向或新窗口方式到达，统一保留当前实例和会话。
@@ -804,13 +822,14 @@ public struct RemoteWebView: UIViewRepresentable {
                     selectAccount(selectedIndex, in: webView)
                     return
                 }
-                // In-page links often omit /u/N/. Keep the chosen account on those links.
+                // 页面内链接常省略 /u/N/：沿用当前页面实际所在的账号。
+                // 不用保存的偏好——偏好若没能恢复，强加它会把用户带去登录一个不存在的编号。
                 if navigationAction.navigationType == .linkActivated,
                    AntigravityAccountRoute.sessionIndex(in: url) == nil,
-                   let preferredSessionIndex {
+                   let currentIndex = webView.url.flatMap(AntigravityAccountRoute.sessionIndex(in:)) {
                     decisionHandler(.cancel)
                     awaitingCommit = true
-                    webView.load(URLRequest(url: AntigravityAccountRoute.applying(preferredSessionIndex, to: url)))
+                    webView.load(URLRequest(url: AntigravityAccountRoute.applying(currentIndex, to: url)))
                     return
                 }
             }
@@ -839,7 +858,21 @@ public struct RemoteWebView: UIViewRepresentable {
         public func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
             AccountDiagnostics.shared.record(.committed, url: webView.url)
             awaitingCommit = false
+            if let url = webView.url, GoogleSignInGate.isInteractiveSignIn(url) {
+                if let fallback = recoveryFallbackURL, !userAccountFlow {
+                    // 纠正重试被要求登录：这个编号已失效。回到刚才的页面，由账号提示让用户决定。
+                    recoveryFallbackURL = nil
+                    awaitingCommit = true
+                    AccountDiagnostics.shared.record(.recoveryAbandoned, url: fallback)
+                    webView.load(URLRequest(url: fallback))
+                    return
+                }
+                // 用户真的看到了登录/选账号页面：登录完成后落地的账号就是用户的选择，不再纠正回旧编号。
+                if !userAccountFlow { AccountDiagnostics.shared.record(.signInShown, url: url) }
+                userAccountFlow = true
+            }
             if let url = webView.url, AntigravityAccountRoute.isRemotePage(url) {
+                recoveryFallbackURL = nil
                 if userAccountFlow {
                     acceptAccountFlowLanding(url)
                 } else if let preferredSessionIndex,
@@ -848,6 +881,7 @@ public struct RemoteWebView: UIViewRepresentable {
                     // One bounded retry handles a restored page landing on the bare/default route.
                     attemptedAccountRecovery = true
                     awaitingCommit = true
+                    recoveryFallbackURL = url
                     let target = AntigravityAccountRoute.applying(preferredSessionIndex, to: url)
                     AccountDiagnostics.shared.record(.accountRecovery, url: target)
                     webView.load(URLRequest(url: target))
@@ -970,6 +1004,7 @@ public struct RemoteWebView: UIViewRepresentable {
             if GoogleSignInGate.isAccountLogin(url) {
                 // 新窗口只能由用户手势打开：添加账号、退出、管理账号等都属于主动操作。
                 userAccountFlow = true
+                recoveryFallbackURL = nil
             }
             webView.load(navigationAction.request)
             return nil

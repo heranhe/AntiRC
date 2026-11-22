@@ -83,6 +83,9 @@ public enum ConversationBridge {
     public static let script = #"""
     (() => {
       if (window.__antiConversation) return;
+      // Google 登录、账号菜单与 Cookie 轮换页面没有对话：不扫描，避免拖慢登录。
+      if (/^(accounts\.google\.com|accounts\.youtube\.com|ogs\.google\.com|myaccount\.google\.com)$/i
+        .test(location.hostname)) return;
 
       const official = /(^|\.)antigravity\.google\.com$/i.test(location.hostname) ||
         location.hostname === 'antigravity.google.com';

@@ -20,7 +20,8 @@ public enum UserAgentPreset: String, CaseIterable, Identifiable {
     public var userAgentString: String {
         switch self {
         case .standardSafari:
-            return UserAgentHelper.mobileSafariUserAgent()
+            // 空字符串表示：WebKit 自带 UA + Safari 标记（见 RemoteWebView 的 applicationNameForUserAgent）。
+            return ""
         case .desktopSafari:
             // 桌面版 Safari，以获得完整桌面布局
             return "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.2 Safari/605.1.15"

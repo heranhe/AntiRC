@@ -15,7 +15,7 @@ final class AccountDiagnostics {
         case processStarted, settingsRestored, prepareInput, prepareTarget, routeSaved
         case loadRequested, navigationAction, popup, provisional, redirect, committed, finished
         case routeObserved, profileDetected, chooserOpened, provisionalFailed, navigationFailed
-        case accountSelected, accountRecovery
+        case accountSelected, accountRecovery, signInShown, recoveryAbandoned
     }
 
     static var appVersion: String {
@@ -45,7 +45,8 @@ final class AccountDiagnostics {
         let category: String
         switch host {
         case "antigravity.google.com": category = AntigravityAccountRoute.isRemotePage(url) ? "remote" : "remote-other"
-        case "accounts.google.com": category = "google-login"
+        case "accounts.google.com":
+            category = GoogleSignInGate.isInteractiveSignIn(url) ? "google-login" : "google-passthrough"
         case "ogs.google.com": category = "google-menu"
         default: category = "other"
         }
@@ -122,17 +123,14 @@ public enum UserAgentHelper {
         return true
     }
 
-    /// 与当前系统版本一致的 Mobile Safari UA。写死旧版本会让 Google 把内嵌页当成异常客户端。
-    public static func mobileSafariUserAgent() -> String {
-        let parts = UIDevice.current.systemVersion.split(separator: ".")
-        let major = parts.first.map(String.init) ?? "17"
+    /// 追加在 WebKit 自带 UA 之后的 Safari 标记。
+    /// 系统部分（含 iOS 26 起冻结的 “iPhone OS 18_6”）交给 WebKit 生成，结果与真实 Safari 一致；
+    /// 自拼的系统版本号是真实 Safari 不会发出的组合，容易被 Google 当成异常客户端，增加验证和掉登录。
+    public static func safariApplicationName(systemVersion: String = UIDevice.current.systemVersion) -> String {
+        let parts = systemVersion.split(separator: ".")
+        let major = parts.first.map(String.init) ?? "18"
         let minor = parts.dropFirst().first.map(String.init) ?? "0"
-        let osToken = "\(major)_\(minor)"
-        let versionToken = "\(major).\(minor)"
-        if UIDevice.current.userInterfaceIdiom == .pad {
-            return "Mozilla/5.0 (iPad; CPU OS \(osToken) like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/\(versionToken) Mobile/15E148 Safari/604.1"
-        }
-        return "Mozilla/5.0 (iPhone; CPU iPhone OS \(osToken) like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/\(versionToken) Mobile/15E148 Safari/604.1"
+        return "Version/\(major).\(minor) Mobile/15E148 Safari/604.1"
     }
 
     /// 远程控制地址归一化（扫码 / 粘贴 / 手动输入统一入口）
@@ -273,6 +271,14 @@ public enum GoogleSignInGate {
             && (path.contains("/o/oauth2") || path.contains("/signin"))
     }
 
+    /// 真正展示给用户的登录、选账号或验证页面。CheckCookie、SetSID、RotateCookies 等自动中转不算。
+    public static func isInteractiveSignIn(_ url: URL) -> Bool {
+        guard isAccountLogin(url) else { return false }
+        let path = url.path.lowercased()
+        let passThrough = ["/checkcookie", "/setsid", "/accounts/setsid", "/rotatecookies", "/listaccounts", "/checkconnection"]
+        return !passThrough.contains { path.hasPrefix($0) }
+    }
+
     /// 在 Google 登录页加载前执行：去掉内嵌网页特征，并避开无法完成的蓝牙通行密钥流程。
     public static let compatibilityScript = """
     (function () {
@@ -329,9 +335,13 @@ public enum GoogleSignInGate {
       } catch (e) {}
 
       var recovered = false;
+      var observer = null;
+      var pending = null;
       function recoverBluetoothPage() {
+        pending = null;
         if (recovered || !document.body) return;
-        var text = document.body.innerText || '';
+        // textContent 不触发排版；innerText 在每次 DOM 变化时都会强制重排，拖慢登录页。
+        var text = document.body.textContent || '';
         if (text.indexOf('蓝牙') === -1 && text.toLowerCase().indexOf('bluetooth') === -1) return;
         var labels = ['试其他方式', '试试其他方式', 'Try another way', 'Try a different way'];
         var nodes = document.querySelectorAll('button, a, [role="link"], [role="button"]');
@@ -340,6 +350,7 @@ public enum GoogleSignInGate {
           for (var j = 0; j < labels.length; j++) {
             if (label === labels[j]) {
               recovered = true;
+              if (observer) observer.disconnect();
               nodes[i].click();
               return;
             }
@@ -348,8 +359,11 @@ public enum GoogleSignInGate {
       }
       function watch() {
         recoverBluetoothPage();
-        if (!document.body) return;
-        var observer = new MutationObserver(recoverBluetoothPage);
+        if (!document.body || recovered) return;
+        // 登录页动画会产生大量 DOM 变化：合并为每 300ms 最多检查一次。
+        observer = new MutationObserver(function () {
+          if (!pending) pending = setTimeout(recoverBluetoothPage, 300);
+        });
         observer.observe(document.body, { childList: true, subtree: true, characterData: true });
       }
       if (document.readyState === 'loading') {

@@ -306,6 +306,119 @@ final class AccountRecoveryTests: XCTestCase {
         XCTAssertTrue(relaunched.historyList.allSatisfy { $0.status == .disconnected })
     }
 
+    func testInteractiveSignInLandingIsAcceptedInsteadOfForcingAnotherLogin() throws {
+        let model = WebViewModel()
+        var selected: URL?
+        model.onAccountSelected = { url, _ in selected = url }
+        let coordinator = RemoteWebView(viewModel: model, userAgent: "").makeCoordinator()
+        let web = AccountNavigationWebView()
+        coordinator.load(WebLoadRequest(url: URL(string: "https://antigravity.google.com/u/2/r/mac")!, connectionID: UUID()), in: web)
+        // 网页脚本自动跳去登录页（非用户点击），用户在登录页完成登录。
+        web.simulatedURL = URL(string: "https://accounts.google.com/v3/signin/identifier?continue=x")!
+        coordinator.webView(web, didCommit: nil)
+        XCTAssertTrue(coordinator.userAccountFlow)
+        web.simulatedURL = URL(string: "https://antigravity.google.com/r/mac")!
+        coordinator.webView(web, didCommit: nil)
+        XCTAssertEqual(web.requests.count, 1, "刚登录完成的账号不能再被纠正回旧编号，否则会再次要求登录")
+        XCTAssertEqual(selected?.path, "/u/0/r/mac")
+    }
+
+    func testPassThroughLoginPagesDoNotCountAsSignIn() throws {
+        XCTAssertFalse(GoogleSignInGate.isInteractiveSignIn(URL(string: "https://accounts.google.com/CheckCookie?continue=x")!))
+        XCTAssertFalse(GoogleSignInGate.isInteractiveSignIn(URL(string: "https://accounts.youtube.com/accounts/SetSID")!))
+        XCTAssertFalse(GoogleSignInGate.isInteractiveSignIn(URL(string: "https://accounts.google.com/RotateCookiesPage")!))
+        XCTAssertTrue(GoogleSignInGate.isInteractiveSignIn(URL(string: "https://accounts.google.com/ServiceLogin?passive=1209600")!))
+        XCTAssertTrue(GoogleSignInGate.isInteractiveSignIn(URL(string: "https://accounts.google.com/AccountChooser")!))
+        XCTAssertFalse(GoogleSignInGate.isInteractiveSignIn(URL(string: "https://antigravity.google.com/r/mac")!))
+
+        let model = WebViewModel()
+        let coordinator = RemoteWebView(viewModel: model, userAgent: "").makeCoordinator()
+        let web = AccountNavigationWebView()
+        coordinator.load(WebLoadRequest(url: URL(string: "https://antigravity.google.com/u/2/r/mac")!, connectionID: UUID()), in: web)
+        web.simulatedURL = URL(string: "https://accounts.google.com/CheckCookie?continue=x")!
+        coordinator.webView(web, didCommit: nil)
+        XCTAssertFalse(coordinator.userAccountFlow)
+        web.simulatedURL = URL(string: "https://antigravity.google.com/r/mac")!
+        coordinator.webView(web, didCommit: nil)
+        XCTAssertEqual(web.requests.last?.url?.path, "/u/2/r/mac", "自动中转后仍应恢复保存的账号")
+    }
+
+    func testRecoveryThatRequiresSignInIsAbandoned() throws {
+        let model = WebViewModel()
+        var selected: URL?
+        model.onAccountSelected = { url, _ in selected = url }
+        let coordinator = RemoteWebView(viewModel: model, userAgent: "").makeCoordinator()
+        let web = AccountNavigationWebView()
+        coordinator.load(WebLoadRequest(url: URL(string: "https://antigravity.google.com/u/2/r/mac?p=c%2Fthread")!, connectionID: UUID()), in: web)
+        web.simulatedURL = URL(string: "https://antigravity.google.com/r/mac?p=c%2Fthread")!
+        coordinator.webView(web, didCommit: nil)
+        XCTAssertEqual(web.requests.last?.url?.path, "/u/2/r/mac")
+        // 编号 2 已不在本机登录账号中，Google 要求登录：放弃纠正，回到刚才的页面。
+        web.simulatedURL = URL(string: "https://accounts.google.com/v3/signin/identifier")!
+        coordinator.webView(web, didCommit: nil)
+        XCTAssertEqual(web.requests.count, 3)
+        let fallback = try XCTUnwrap(web.requests.last?.url)
+        XCTAssertEqual(fallback.path, "/r/mac")
+        XCTAssertEqual(fallback.query, "p=c%2Fthread")
+        XCTAssertFalse(coordinator.userAccountFlow)
+        web.simulatedURL = fallback
+        coordinator.webView(web, didCommit: nil)
+        XCTAssertEqual(web.requests.count, 3, "放弃后不能再次纠正")
+        XCTAssertNil(selected, "自动放弃不改写保存的偏好，由账号提示让用户决定")
+    }
+
+    func testUserStartedSignInDuringRecoveryIsNotAbandoned() throws {
+        let model = WebViewModel()
+        let coordinator = RemoteWebView(viewModel: model, userAgent: "").makeCoordinator()
+        let web = AccountNavigationWebView()
+        coordinator.load(WebLoadRequest(url: URL(string: "https://antigravity.google.com/u/2/r/mac")!, connectionID: UUID()), in: web)
+        web.simulatedURL = URL(string: "https://antigravity.google.com/r/mac")!
+        coordinator.webView(web, didCommit: nil)
+        let requestsBeforeSignIn = web.requests.count
+        // 用户在纠正重试途中点了网页上的登录/添加账号。
+        coordinator.webView(web, decidePolicyFor: FakeNavigationAction(url: URL(string: "https://accounts.google.com/AddSession")!, type: .linkActivated)) { _ in }
+        web.simulatedURL = URL(string: "https://accounts.google.com/AddSession")!
+        coordinator.webView(web, didCommit: nil)
+        XCTAssertEqual(web.requests.count, requestsBeforeSignIn, "用户主动添加账号时不能被拉回")
+        XCTAssertTrue(coordinator.userAccountFlow)
+    }
+
+    func testInPageLinksFollowCurrentPageAccount() throws {
+        let model = WebViewModel()
+        let coordinator = RemoteWebView(viewModel: model, userAgent: "").makeCoordinator()
+        let web = AccountNavigationWebView()
+        coordinator.load(WebLoadRequest(url: URL(string: "https://antigravity.google.com/u/2/r/mac")!, connectionID: UUID()), in: web)
+        // 纠正失败、页面停在默认账号：链接不应被强加编号 2。
+        web.simulatedURL = URL(string: "https://antigravity.google.com/r/mac")!
+        var policy: WKNavigationActionPolicy?
+        coordinator.webView(web, decidePolicyFor: FakeNavigationAction(url: URL(string: "https://antigravity.google.com/r/other")!, type: .linkActivated)) { policy = $0 }
+        XCTAssertEqual(policy, .allow)
+        // 页面本身在编号 1：链接沿用 1。
+        web.simulatedURL = URL(string: "https://antigravity.google.com/u/1/r/mac")!
+        coordinator.webView(web, decidePolicyFor: FakeNavigationAction(url: URL(string: "https://antigravity.google.com/r/other")!, type: .linkActivated)) { policy = $0 }
+        XCTAssertEqual(policy, .cancel)
+        XCTAssertEqual(web.requests.last?.url?.path, "/u/1/r/other")
+    }
+
+    func testStandardPresetUsesWebKitGeneratedSafariUserAgent() async throws {
+        XCTAssertEqual(UserAgentHelper.safariApplicationName(systemVersion: "26.1"), "Version/26.1 Mobile/15E148 Safari/604.1")
+        XCTAssertEqual(UserAgentHelper.safariApplicationName(systemVersion: "18"), "Version/18.0 Mobile/15E148 Safari/604.1")
+        let settings = AppSettings(defaults: defaults)
+        settings.userAgentPreset = .standardSafari
+        XCTAssertNil(RemoteWebView.customUserAgent(for: settings.activeUserAgent))
+        settings.userAgentPreset = .desktopSafari
+        XCTAssertNotNil(RemoteWebView.customUserAgent(for: settings.activeUserAgent))
+
+        let config = WKWebViewConfiguration()
+        config.applicationNameForUserAgent = UserAgentHelper.safariApplicationName()
+        let web = WKWebView(frame: .zero, configuration: config)
+        let value = try await web.evaluateJavaScript("navigator.userAgent")
+        let agent = try XCTUnwrap(value as? String)
+        print("WebKit Safari UA:", agent)
+        XCTAssertTrue(agent.hasPrefix("Mozilla/5.0 ("))
+        XCTAssertTrue(agent.hasSuffix("(KHTML, like Gecko) " + UserAgentHelper.safariApplicationName()))
+    }
+
     func testDefaultFallbackRecoveryIsBoundedAndCannotChangePreference() throws {
         let model = WebViewModel()
         let coordinator = RemoteWebView(viewModel: model, userAgent: "").makeCoordinator()
