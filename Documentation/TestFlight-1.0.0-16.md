@@ -24,4 +24,6 @@
 
 ## 上传
 
-待上传。
+- 版本：`1.0.0 (16)`，Release 归档，自动签名（团队 `G6JJHZL29U`）。
+- `xcodebuild -exportArchive`（app-store-connect / upload）：Upload succeeded，构建处于 Apple 处理流程中。
+- 外部测试组分配与 What to Test 需在 App Store Connect 中确认。
