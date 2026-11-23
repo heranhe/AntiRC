@@ -80,3 +80,24 @@ test('normal instance links and invalid account links are not intercepted', () =
     }
   } finally { dom.window.close(); }
 });
+
+test('signed-out welcome page reports once, signed-in header does not', async () => {
+  const signIn = '<div id="gb"><a aria-label="Sign in" href="https://accounts.google.com/ServiceLogin?passive=1209600&continue=https://antigravity.google.com/">Sign in</a></div>';
+  const {dom, messages} = page(signIn);
+  try {
+    dom.window.document.body.appendChild(dom.window.document.createElement('div'));
+    await wait();
+    assert.deepEqual(JSON.parse(JSON.stringify(messages)), [{event: 'signedOut'}]);
+    dom.window.document.querySelector('#gb').innerHTML = '<a aria-label="Google Account: Alice (alice@example.com)" href="https://accounts.google.com/SignOutOptions"></a>';
+    await wait();
+    assert.equal(messages.at(-1), 'alice@example.com');
+  } finally { dom.window.close(); }
+  for (const html of [
+    '<div id="gb"><a aria-label="Google Account: Bob (bob@example.com)"></a></div>',
+    '<a href="https://accounts.google.com/ServiceLogin?continue=x">Sign in elsewhere</a>',
+    '<div id="gb"><a hidden href="https://accounts.google.com/ServiceLogin?continue=x">Sign in</a></div>',
+  ]) {
+    const other = page(html);
+    try { assert.ok(!other.messages.some(m => m?.event === 'signedOut'), html); } finally { other.dom.window.close(); }
+  }
+});

@@ -486,6 +486,10 @@ enum GoogleAccountBridge {
       document.addEventListener('pointerdown', accountInteraction, true);
       document.addEventListener('click', accountInteraction, true);
       let previous = '';
+      // 未登录时 Google 顶栏显示 Sign in（ServiceLogin 链接）而不是头像。
+      const signInVisible = () => location.hostname === 'antigravity.google.com' && window.top === window
+        && [...document.querySelectorAll('#gb a[href^="https://accounts.google.com/ServiceLogin"]')]
+          .some(el => el.getClientRects().length);
       const report = () => {
         const emails = new Set();
         for (const el of document.querySelectorAll('a[aria-label], button[aria-label], [role="button"][aria-label]')) {
@@ -495,7 +499,15 @@ enum GoogleAccountBridge {
           const email = label.match(/[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,64}/)?.[0];
           if (email) emails.add(email);
         }
-        if (emails.size !== 1) { previous = ''; return; }
+        if (emails.size !== 1) {
+          if (emails.size === 0 && signInVisible()) {
+            if (previous !== '#signedOut') {
+              previous = '#signedOut';
+              window.webkit.messageHandlers.googleAccount.postMessage({event: 'signedOut'});
+            }
+          } else previous = '';
+          return;
+        }
         const email = [...emails][0];
         if (email !== previous) {
           previous = email;

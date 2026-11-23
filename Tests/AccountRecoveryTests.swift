@@ -419,6 +419,33 @@ final class AccountRecoveryTests: XCTestCase {
         XCTAssertTrue(agent.hasSuffix("(KHTML, like Gecko) " + UserAgentHelper.safariApplicationName()))
     }
 
+    func testSignedOutWelcomePageShowsWaitingForSignInUntilProfileAppears() async throws {
+        let model = WebViewModel()
+        let coordinator = RemoteWebView(viewModel: model, userAgent: "").makeCoordinator()
+        let web = AccountNavigationWebView()
+        let welcome = URL(string: "https://antigravity.google.com/")!
+        coordinator.load(WebLoadRequest(url: welcome, connectionID: UUID()), in: web)
+        web.simulatedURL = welcome
+        coordinator.webView(web, didCommit: nil)
+        let controller = WKUserContentController()
+        // 页面脚本先于 didFinish 报告未登录，didFinish 不能把它覆盖成“已连接”。
+        coordinator.userContentController(controller, didReceive: FakeScriptMessage(body: ["event": "signedOut"], source: welcome))
+        coordinator.webView(web, didFinish: nil)
+        try await Task.sleep(nanoseconds: 50_000_000)
+        XCTAssertEqual(model.health, .signIn)
+        XCTAssertTrue(model.pageSignedOut)
+        // 同一页面内出现头像（登录完成），恢复为已连接。
+        coordinator.userContentController(controller, didReceive: FakeScriptMessage(body: "Google Account: Alice (alice@example.com)", source: welcome))
+        XCTAssertEqual(model.health, .ready)
+        XCTAssertFalse(model.pageSignedOut)
+        // 已登录页面不受上一页的未登录标记影响。
+        coordinator.userContentController(controller, didReceive: FakeScriptMessage(body: ["event": "signedOut"], source: welcome))
+        coordinator.webView(web, didCommit: nil)
+        coordinator.webView(web, didFinish: nil)
+        try await Task.sleep(nanoseconds: 50_000_000)
+        XCTAssertEqual(model.health, .ready)
+    }
+
     func testDefaultFallbackRecoveryIsBoundedAndCannotChangePreference() throws {
         let model = WebViewModel()
         let coordinator = RemoteWebView(viewModel: model, userAgent: "").makeCoordinator()
@@ -489,6 +516,31 @@ private final class FakeNavigationAction: WKNavigationAction {
     override var request: URLRequest { fakeRequest }
     override var navigationType: WKNavigationType { fakeType }
     override var targetFrame: WKFrameInfo? { nil }
+}
+
+private final class FakeFrameInfo: WKFrameInfo {
+    private let fakeRequest: URLRequest
+    init(url: URL) {
+        fakeRequest = URLRequest(url: url)
+        super.init()
+    }
+    override var request: URLRequest { fakeRequest }
+    override var isMainFrame: Bool { true }
+}
+
+private final class FakeScriptMessage: WKScriptMessage {
+    private let fakeBody: Any
+    private let fakeFrame: WKFrameInfo
+    init(body: Any, source: URL, name: String = "googleAccount") {
+        fakeBody = body
+        fakeFrame = FakeFrameInfo(url: source)
+        fakeName = name
+        super.init()
+    }
+    private let fakeName: String
+    override var body: Any { fakeBody }
+    override var frameInfo: WKFrameInfo { fakeFrame }
+    override var name: String { fakeName }
 }
 
 /// Run these in separate test-without-building invocations to exercise process death.

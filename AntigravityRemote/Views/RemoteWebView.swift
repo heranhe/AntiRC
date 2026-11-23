@@ -69,6 +69,8 @@ public final class WebViewModel: ObservableObject {
     @Published public var accountNotice: AccountNotice?
     /// 页面头像显示的邮箱（尚未登录或未识别时为 nil）。
     @Published public var identifiedEmail: String?
+    /// 当前页面顶栏显示 Sign in 而非头像：网页已打开，但还没有登录 Google。
+    @Published public var pageSignedOut = false
     @Published private(set) var connectionNoticeDismissed = false
     var showsConnectionNotice: Bool {
         !connectionNoticeDismissed && (loadError != nil || isInstanceDisconnected)
@@ -505,6 +507,12 @@ public struct RemoteWebView: UIViewRepresentable {
                     parent.viewModel.dismissConnectionNotice()
                     return
                 }
+                if let event = message.body as? [String: String], event["event"] == "signedOut" {
+                    let model = parent.viewModel
+                    model.pageSignedOut = true
+                    if model.health == .ready { model.health = .signIn }
+                    return
+                }
                 guard let value = message.body as? String,
                       let email = UserAgentHelper.extractEmail(from: value) else { return }
                 let currentURL = webView?.url
@@ -513,7 +521,14 @@ public struct RemoteWebView: UIViewRepresentable {
                     matches = (AntigravityAccountRoute.sessionIndex(in: currentURL) ?? "0") == preferredSessionIndex
                 }
                 AccountDiagnostics.shared.record(.profileDetected, url: message.frameInfo.request.url)
-                parent.viewModel.identifiedEmail = email
+                let model = parent.viewModel
+                model.identifiedEmail = email
+                if model.pageSignedOut {
+                    // 在同一页面内完成了登录（SPA 不一定重新加载）：恢复为已连接。
+                    model.pageSignedOut = false
+                    let onSignInPage = currentURL.map(GoogleSignInGate.isAccountLogin) ?? false
+                    if model.health == .signIn, !onSignInPage, !model.isInstanceDisconnected { model.health = .ready }
+                }
                 parent.onAccountIdentified?(IdentifiedAccount(
                     email: email, pageURL: currentURL, connectionID: loadedConnectionID, matchesPreference: matches
                 ))
@@ -530,7 +545,7 @@ public struct RemoteWebView: UIViewRepresentable {
                     } else if status == "connected", model.isInstanceDisconnected {
                         model.isInstanceDisconnected = false
                         model.lastDisconnectedNotice = nil
-                        if model.loadError == nil { model.health = .ready }
+                        if model.loadError == nil { model.health = model.pageSignedOut ? .signIn : .ready }
                     }
                 }
                 return
@@ -858,6 +873,8 @@ public struct RemoteWebView: UIViewRepresentable {
         public func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
             AccountDiagnostics.shared.record(.committed, url: webView.url)
             awaitingCommit = false
+            // 新文档会重新报告登录状态。
+            parent.viewModel.pageSignedOut = false
             if let url = webView.url, GoogleSignInGate.isInteractiveSignIn(url) {
                 if let fallback = recoveryFallbackURL, !userAccountFlow {
                     // 纠正重试被要求登录：这个编号已失效。回到刚才的页面，由账号提示让用户决定。
@@ -914,7 +931,8 @@ public struct RemoteWebView: UIViewRepresentable {
                     self.parent.viewModel.currentURL = url
                 }
                 if !self.parent.viewModel.isInstanceDisconnected {
-                    self.parent.viewModel.health = onSignInPage ? .signIn : .ready
+                    let model = self.parent.viewModel
+                    model.health = (onSignInPage || model.pageSignedOut) ? .signIn : .ready
                 }
             }
 
